@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AtiToolz • English Picture Game</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E🇬🇧%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Page-specific overrides to make the game full and simple */
+      main { max-width: none; width: 100vw; padding: clamp(0.5rem, 2vh, 2rem); padding-block-end: 4rem; }
+      .game {
+        display: grid;
+        grid-template-rows: 1fr auto;
+        gap: clamp(0.5rem, 2vh, 1rem);
+        place-items: center;
+        min-height: 85vh;
+      }
+      #picture {
+        max-width: min(92vw, 1200px);
+        max-height: 70vh;
+        object-fit: contain;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 30px color-mix(in oklab, var(--fg) 15%, transparent);
+        cursor: pointer;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+      #nextBtn {
+        font-size: clamp(1.25rem, 3.5vw, 2rem);
+        padding: clamp(0.75rem, 2.8vh, 1.25rem) clamp(1.5rem, 6vw, 2.5rem);
+        border: none;
+        border-radius: 0.75rem;
+        background: color-mix(in oklab, var(--accent) 70%, transparent);
+        color: white;
+        box-shadow: 0 6px 18px color-mix(in oklab, var(--accent) 40%, transparent);
+        cursor: pointer;
+        width: min(90vw, 420px);
+      }
+      #nextBtn:active { transform: translateY(1px); }
+      .topbar { text-align: center; margin-block-end: 0.5rem; color: var(--muted); }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    </style>
+    <style>
+      #backBtn {
+        position: fixed;
+        inset-block-start: 0.75rem;
+        inset-inline-start: 0.75rem;
+        z-index: 1000;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: clamp(1rem, 2.5vw, 1.25rem);
+        padding: 0.5rem 0.9rem;
+        border-radius: 0.6rem;
+        background: color-mix(in oklab, var(--fg) 12%, transparent);
+        color: var(--fg);
+        box-shadow: 0 4px 14px color-mix(in oklab, var(--fg) 18%, transparent);
+      }
+    </style>
+  </head>
+  <body>
+    <a id="backBtn" href="index.html" aria-label="Back to home">⬅ BACK</a>
+    <main>
+      <h1>English Picture Game</h1>
+      <p class="topbar">Tap the picture to hear its name. Tap Next for another.</p>
+      <section class="game" aria-live="polite">
+        <img id="picture" alt="Picture for the word" />
+        <button id="nextBtn" type="button" aria-label="Show next picture">Next ▶</button>
+        <span id="word" class="sr-only" aria-hidden="true"></span>
+      </section>
+    </main>
+    <footer>
+      <small>AtiToolz • English practice • <span id="year"></span></small>
+    </footer>
+
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Files come from an auto-generated manifest; falls back to this default list.
+      let files = [];
+      const DEFAULT_FILES = [
+        'ball.jpg',
+        'big small.jpeg',
+        'bike.jpeg',
+        'book.jpeg',
+        'boy.jpeg',
+        'brother.png',
+        'car.jpeg',
+        'cat.jpeg',
+        'chair.jpeg',
+        'cow.jpeg',
+        'crayon.jpeg',
+        'dad.png',
+        'dog.jpeg',
+        'doll.jpeg',
+        'duck.jpeg',
+        'girl.jpeg',
+        'goat.jpeg',
+        'guitar.jpeg',
+        'hen.jpeg',
+        'horse.jpeg',
+        'mom.jpg',
+        'notebook.jpeg',
+        'old new.jpeg',
+        'pen.jpeg',
+        'pencil case.jpg',
+        'pencil.png',
+        'rabbit.jpeg',
+        'rooster.jpeg',
+        'rubber.jpeg',
+        'ruler.jpeg',
+        'scooter.jpeg',
+        'sheep.jpeg',
+        'sister.jpg',
+        'tracktor.jpeg',
+      ];
+
+      const basePath = 'english_game/';
+      const imgEl = document.getElementById('picture');
+      const nextBtn = document.getElementById('nextBtn');
+      const wordEl = document.getElementById('word');
+
+      let currentIndex = -1;
+
+      function fileToLabel(file) {
+        const base = file.replace(/^.*[\\\/]/, '').replace(/\.[^/.]+$/, '');
+        return base.replace(/[-_]+/g, ' ').trim();
+      }
+
+      function pickNextIndex() {
+        if (files.length <= 1) return 0;
+        let i;
+        do { i = Math.floor(Math.random() * files.length); } while (i === currentIndex);
+        return i;
+      }
+
+      function show(index) {
+        currentIndex = index;
+        const file = files[index];
+        const label = fileToLabel(file);
+        wordEl.textContent = label;
+        const encoded = encodeURIComponent(file);
+        const url = basePath + encoded;
+        imgEl.src = url;
+        imgEl.alt = label;
+      }
+
+      function next() { if (!files.length) return; show(pickNextIndex()); }
+
+      // Speech synthesis utils (click image to speak)
+      function speak(text) {
+        try {
+          if (!('speechSynthesis' in window)) return;
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(text);
+          // Prefer an English voice if available
+          const voices = speechSynthesis.getVoices();
+          const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+          if (en) utter.voice = en;
+          utter.rate = 0.95;
+          utter.pitch = 1.0;
+          speechSynthesis.speak(utter);
+        } catch (_) { /* ignore */ }
+      }
+
+      imgEl.addEventListener('click', () => {
+        if (!wordEl.textContent) return;
+        speak(wordEl.textContent);
+      });
+      nextBtn.addEventListener('click', next);
+
+      // Keyboard: Space -> speak, Enter -> next
+      window.addEventListener('keydown', (e) => {
+        const key = e.code || e.key;
+        if (key === 'Enter' || e.key === 'Enter') {
+          e.preventDefault();
+          next();
+          return;
+        }
+        const isSpace = key === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+        if (isSpace) {
+          e.preventDefault();
+          if (!wordEl.textContent) return;
+          speak(wordEl.textContent);
+        }
+      });
+
+      // Load manifest.json if present, otherwise fall back to DEFAULT_FILES
+      async function loadFiles() {
+        try {
+          const res = await fetch(basePath + 'manifest.json', { cache: 'no-store' });
+          if (!res.ok) throw new Error('No manifest');
+          const arr = await res.json();
+          if (!Array.isArray(arr) || !arr.length) throw new Error('Empty manifest');
+          return arr;
+        } catch {
+          return DEFAULT_FILES.slice();
+        }
+      }
+
+      (async () => {
+        files = await loadFiles();
+        next();
+      })();
+    </script>
+  </body>
+  </html>
