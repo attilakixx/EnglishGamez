@@ -1,0 +1,9 @@
+docker rm -f atitoolz
+docker run -d \
+	--name atitoolz \
+	-p 8080:80 \
+	-v /home/attilakixx/WORK/repos/myscripts/AtiToolz:/usr/share/nginx/html:ro \
+	nginx:latest
+
+	http://localhost:8080
+

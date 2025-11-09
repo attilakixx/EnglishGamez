@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EnglishGamez</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --text: #0f172a;
+        --accent: #3b82f6; /* blue */
+        --accent-2: #10b981; /* green */
+        --accent-3: #f59e0b; /* amber */
+        --shadow: 0 10px 25px rgba(2, 6, 23, 0.08);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: radial-gradient(1200px 600px at 100% -10%, #dbeafe 0%, transparent 60%),
+                    radial-gradient(900px 500px at -10% 120%, #dcfce7 0%, transparent 60%),
+                    var(--bg);
+        color: var(--text);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 720px;
+      }
+
+      .card {
+        background: var(--card);
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        padding: 28px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(28px, 6vw, 42px);
+        line-height: 1.1;
+        letter-spacing: 0.5px;
+        text-align: center;
+      }
+
+      .subtitle {
+        margin: 0 0 24px;
+        text-align: center;
+        color: #334155;
+        font-size: clamp(16px, 2.8vw, 20px);
+      }
+
+      .menu {
+        display: grid;
+        gap: 16px;
+      }
+
+      /* Two columns on wider screens */
+      @media (min-width: 720px) {
+        .menu { grid-template-columns: 1fr 1fr; }
+      }
+
+      .menu-button {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        width: 100%;
+        min-height: 96px; /* big tap target */
+        padding: 20px 24px;
+        border-radius: 16px;
+        border: 4px solid transparent;
+        background: #f1f5f9;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 800;
+        font-size: clamp(20px, 4.4vw, 26px);
+        letter-spacing: 0.4px;
+        transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
+        box-shadow: 0 6px 0 rgba(15, 23, 42, 0.12);
+      }
+
+      .menu-button:focus { outline: none; }
+      .menu-button:focus-visible { border-color: #0ea5e9; box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.25); }
+
+      .menu-button:hover { transform: translateY(-2px); box-shadow: 0 10px 0 rgba(15, 23, 42, 0.12); }
+      .menu-button:active { transform: translateY(0); box-shadow: 0 6px 0 rgba(15, 23, 42, 0.12); }
+
+      .menu-button .emoji {
+        font-size: clamp(28px, 6.5vw, 40px);
+      }
+
+      .menu-button.accent-1 { background: #dbeafe; border-color: #93c5fd; }
+      .menu-button.accent-2 { background: #dcfce7; border-color: #86efac; }
+      .menu-button.accent-3 { background: #fef9c3; border-color: #fde68a; }
+
+      footer {
+        margin-top: 16px;
+        text-align: center;
+        color: #475569;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container" role="main">
+      <div class="card" aria-labelledby="title">
+        <h1 id="title">EnglishGamez</h1>
+        <p class="subtitle">Choose a game to start!</p>
+
+        <nav class="menu" aria-label="Main Menu">
+          <!-- Update the href values to your actual page paths -->
+          <a class="menu-button accent-1" href="game1.html" aria-label="Game 1">
+            <span class="emoji" aria-hidden="true">🔤</span>
+            <span>Game 1</span>
+          </a>
+
+          <a class="menu-button accent-2" href="game2.html" aria-label="Game 2">
+            <span class="emoji" aria-hidden="true">🧩</span>
+            <span>Game 2</span>
+          </a>
+
+          <a class="menu-button accent-3" href="game3.html" aria-label="Game 3">
+            <span class="emoji" aria-hidden="true">🎯</span>
+            <span>Game 3</span>
+          </a>
+        </nav>
+      </div>
+      <footer>
+        Made for kids — big buttons, easy to tap
+      </footer>
+    </main>
+  </body>
+  </html>
+
