@@ -1,0 +1,33 @@
+:root {
+  color-scheme: light dark;
+  --bg: canvas;
+  --fg: canvastext;
+  --muted: color-mix(in oklab, var(--fg) 60%, transparent);
+  --accent: #6e56cf;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font: 16px/1.6 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  display: grid;
+  place-items: center;
+}
+
+main {
+  max-width: 64ch;
+  padding: 2rem;
+  text-align: center;
+}
+
+h1 { font-size: clamp(2rem, 3vw + 1rem, 3rem); margin: 0 0 0.5rem; }
+p { margin: 0.5rem 0; }
+.hint { color: var(--muted); }
+
+footer { position: fixed; inset-block-end: 0; inset-inline: 0; text-align: center; padding: 0.75rem; color: var(--muted); }
+
+code { background: color-mix(in oklab, var(--fg) 10%, transparent); padding: 0.1rem 0.35rem; border-radius: 0.35rem; }
+
