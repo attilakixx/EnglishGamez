@@ -117,6 +117,31 @@
         <h1 id="title">EnglishGamez</h1>
         <p class="subtitle">Choose a game to start!</p>
 
+        <section aria-label="Accent preference" style="margin: 0 0 20px; display: grid; gap: 8px;">
+          <label for="accentSelect" style="font-weight: 700; color: #334155;">Accent for speech</label>
+          <select id="accentSelect" name="accent" aria-label="Choose English accent" style="
+              width: 100%;
+              padding: 12px 14px;
+              border-radius: 12px;
+              border: 2px solid #cbd5e1;
+              background: #f8fafc;
+              color: var(--text);
+              font-weight: 700;
+              font-size: 16px;
+            ">
+            <option value="">Auto (device default)</option>
+            <option value="en-US">American English (US)</option>
+            <option value="en-GB">British English (UK)</option>
+            <option value="en-AU">Australian English (AU)</option>
+            <option value="en-IN">Indian English (IN)</option>
+            <option value="en-IE">Irish English (IE)</option>
+            <option value="en-CA">Canadian English (CA)</option>
+            <option value="en-ZA">South African English (ZA)</option>
+            <option value="en-NZ">New Zealand English (NZ)</option>
+          </select>
+          <small id="accentHint" style="color:#64748b;">Saved for all games on this device.</small>
+        </section>
+
         <nav class="menu" aria-label="Main Menu">
           <a class="menu-button accent-1" href="color-game.html" aria-label="Colors game">
             <span class="emoji" aria-hidden="true">🎨</span>
@@ -138,5 +163,24 @@
         Made for kids — big buttons, easy to tap
       </footer>
     </main>
+    <script>
+    // Persist accent choice for other pages
+    (function initAccentSelector() {
+      try {
+        const key = 'egAccent';
+        const sel = document.getElementById('accentSelect');
+        if (!sel) return;
+        const saved = localStorage.getItem(key) || '';
+        sel.value = saved;
+        sel.addEventListener('change', () => {
+          try { localStorage.setItem(key, sel.value || ''); } catch {}
+          const hint = document.getElementById('accentHint');
+          if (hint) {
+            hint.textContent = 'Saved for all games on this device.';
+          }
+        });
+      } catch {}
+    })();
+    </script>
   </body>
   </html>

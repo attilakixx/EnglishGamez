@@ -142,15 +142,42 @@
       function next() { if (!files.length) return; show(pickNextIndex()); }
 
       // Speech synthesis utils (click image to speak)
+      function getPreferredVoice() {
+        try {
+          const voices = speechSynthesis.getVoices();
+          if (!voices || !voices.length) return null;
+          const code = (localStorage.getItem('egAccent') || '').toLowerCase();
+          if (code) {
+            let v = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(code));
+            if (!v) {
+              const alias = {
+                'en-gb': ['uk', 'british'],
+                'en-us': ['us', 'american'],
+                'en-au': ['au', 'australian'],
+                'en-in': ['indian', 'india'],
+                'en-ie': ['irish'],
+                'en-ca': ['canadian', 'canada'],
+                'en-za': ['south african', 'za'],
+                'en-nz': ['new zealand', 'nz', 'kiwi'],
+              }[code];
+              if (alias) {
+                v = voices.find(vv => alias.some(a => (vv.name || '').toLowerCase().includes(a)));
+              }
+            }
+            if (v) return v;
+          }
+          return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en')) || null;
+        } catch { return null; }
+      }
+
       function speak(text) {
         try {
           if (!('speechSynthesis' in window)) return;
           window.speechSynthesis.cancel();
           const utter = new SpeechSynthesisUtterance(text);
-          // Prefer an English voice if available
-          const voices = speechSynthesis.getVoices();
-          const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-          if (en) utter.voice = en;
+          const preferred = getPreferredVoice();
+          const code = (localStorage.getItem('egAccent') || '').toLowerCase();
+          if (preferred) utter.voice = preferred; else if (code) utter.lang = code;
           utter.rate = 0.95;
           utter.pitch = 1.0;
           speechSynthesis.speak(utter);
