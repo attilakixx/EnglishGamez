@@ -25,13 +25,12 @@ done
     [ -n "$name" ] || continue
     if [ "$first" -eq 1 ]; then
       first=0
-      printf '  \"%s\"' "$name"
+      printf '  "%s"' "$name"
     else
-      printf ',\n  \"%s\"' "$name"
+      printf ',\n  "%s"' "$name"
     fi
   done
   printf '\n]\n'
 ) > "$out"
 
 echo "Wrote $(pwd)/$out"
-
