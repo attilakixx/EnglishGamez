@@ -12,12 +12,19 @@
       .game {
         display: grid;
         grid-template-rows: 1fr auto;
-        gap: clamp(0.5rem, 2vh, 1rem);
+        gap: clamp(0.75rem, 2vh, 1.25rem);
         place-items: center;
         min-height: 85vh;
       }
+      .picture-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(0.75rem, 2vw, 1.25rem);
+        width: 100%;
+      }
       #picture {
-        max-width: min(92vw, 1200px);
+        max-width: min(72vw, 900px);
         max-height: 70vh;
         object-fit: contain;
         border-radius: 0.75rem;
@@ -25,6 +32,26 @@
         cursor: pointer;
         user-select: none;
         -webkit-user-drag: none;
+      }
+      .judgeBtn {
+        font-size: clamp(1rem, 2.8vw, 1.4rem);
+        padding: clamp(0.75rem, 2.4vh, 1.1rem) clamp(0.9rem, 3vw, 1.3rem);
+        border-radius: 0.75rem;
+        border: none;
+        min-width: 64px;
+        cursor: pointer;
+        box-shadow: 0 6px 18px color-mix(in oklab, var(--fg) 30%, transparent);
+        color: #ffffff;
+        font-weight: 700;
+      }
+      #correctBtn {
+        background: #16a34a;
+      }
+      #incorrectBtn {
+        background: #dc2626;
+      }
+      .judgeBtn:active {
+        transform: translateY(1px);
       }
       #nextBtn {
         font-size: clamp(1.25rem, 3.5vw, 2rem);
@@ -62,9 +89,19 @@
     <a id="backBtn" href="index.html" aria-label="Back to home">⬅ BACK</a>
     <main>
       <h1>English Picture Game</h1>
-      <p class="topbar">Tap the picture to hear its name. Tap Next for another.</p>
+      <p class="topbar">
+        Tap the picture to hear its name. Tap ✓ if you knew it, ✗ if you didn&apos;t.
+      </p>
       <section class="game" aria-live="polite">
-        <img id="picture" alt="Picture for the word" />
+        <div class="picture-row">
+          <button id="incorrectBtn" class="judgeBtn" type="button" aria-label="I did not know this word">
+            ✗
+          </button>
+          <img id="picture" alt="Picture for the word" />
+          <button id="correctBtn" class="judgeBtn" type="button" aria-label="I knew this word">
+            ✓
+          </button>
+        </div>
         <button id="nextBtn" type="button" aria-label="Show next picture">Next ▶</button>
         <span id="word" class="sr-only" aria-hidden="true"></span>
       </section>
@@ -113,24 +150,34 @@
       const imgEl = document.getElementById('picture');
       const nextBtn = document.getElementById('nextBtn');
       const wordEl = document.getElementById('word');
+      const correctBtn = document.getElementById('correctBtn');
+      const incorrectBtn = document.getElementById('incorrectBtn');
 
-      let currentIndex = -1;
+      let remaining = [];
+      let currentFile = null;
+      let finished = false;
 
       function fileToLabel(file) {
         const base = file.replace(/^.*[\\\/]/, '').replace(/\.[^/.]+$/, '');
         return base.replace(/[-_]+/g, ' ').trim();
       }
 
-      function pickNextIndex() {
-        if (files.length <= 1) return 0;
-        let i;
-        do { i = Math.floor(Math.random() * files.length); } while (i === currentIndex);
-        return i;
+      function pickNextFile() {
+        if (!remaining.length) return null;
+        if (remaining.length === 1) return remaining[0];
+        let candidate = null;
+        let tries = 0;
+        do {
+          const i = Math.floor(Math.random() * remaining.length);
+          candidate = remaining[i];
+          tries += 1;
+        } while (candidate === currentFile && tries < 6 && remaining.length > 1);
+        return candidate;
       }
 
-      function show(index) {
-        currentIndex = index;
-        const file = files[index];
+      function showFile(file) {
+        if (!file) return;
+        currentFile = file;
         const label = fileToLabel(file);
         wordEl.textContent = label;
         const encoded = encodeURIComponent(file);
@@ -139,7 +186,43 @@
         imgEl.alt = label;
       }
 
-      function next() { if (!files.length) return; show(pickNextIndex()); }
+      function next() {
+        if (finished || !remaining.length) return;
+        const file = pickNextFile();
+        if (!file) {
+          endGame();
+          return;
+        }
+        showFile(file);
+      }
+
+      function endGame() {
+        finished = true;
+        currentFile = null;
+        imgEl.src = '';
+        imgEl.alt = 'All pictures completed';
+        wordEl.textContent = '';
+        nextBtn.disabled = true;
+        correctBtn.disabled = true;
+        incorrectBtn.disabled = true;
+        nextBtn.textContent = 'Done ✔';
+      }
+
+      function markCorrect() {
+        if (finished || !currentFile) return;
+        const idx = remaining.indexOf(currentFile);
+        if (idx !== -1) remaining.splice(idx, 1);
+        if (!remaining.length) {
+          endGame();
+          return;
+        }
+        next();
+      }
+
+      function markIncorrect() {
+        if (finished || !currentFile) return;
+        next();
+      }
 
       // Speech synthesis utils (click image to speak)
       function getPreferredVoice() {
@@ -189,13 +272,15 @@
         speak(wordEl.textContent);
       });
       nextBtn.addEventListener('click', next);
+      correctBtn.addEventListener('click', markCorrect);
+      incorrectBtn.addEventListener('click', markIncorrect);
 
       // Keyboard: Space -> speak, Enter -> next
       window.addEventListener('keydown', (e) => {
         const key = e.code || e.key;
         if (key === 'Enter' || e.key === 'Enter') {
           e.preventDefault();
-          next();
+          markIncorrect();
           return;
         }
         const isSpace = key === 'Space' || e.key === ' ' || e.key === 'Spacebar';
@@ -221,6 +306,7 @@
 
       (async () => {
         files = await loadFiles();
+        remaining = files.slice();
         next();
       })();
     </script>
