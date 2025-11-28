@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Számolás • Összeadás és kivonás</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E➕%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      :root {
+        --green: #16a34a;
+        --red: #ef4444;
+        --soft: color-mix(in oklab, var(--fg) 10%, transparent);
+        --panel: color-mix(in oklab, var(--fg) 6%, transparent);
+      }
+
+      body {
+        background: radial-gradient(800px 500px at 20% 0%, #e0f2fe 0%, transparent 60%),
+                    radial-gradient(900px 650px at 90% 10%, #ede9fe 0%, transparent 60%),
+                    var(--bg);
+        padding: clamp(1rem, 2vw, 2rem);
+        align-items: flex-start;
+      }
+
+      main {
+        width: min(1100px, 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 1rem;
+      }
+
+      h1 {
+        margin-bottom: 0.25rem;
+        letter-spacing: 0.3px;
+      }
+
+      .lead {
+        margin-top: 0;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      .panel {
+        background: var(--panel);
+        border: 2px solid var(--soft);
+        border-radius: 20px;
+        padding: clamp(1rem, 3vw, 1.5rem);
+        box-shadow: 0 12px 30px color-mix(in oklab, var(--fg) 14%, transparent);
+      }
+
+      .controls {
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .control-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .badge {
+        background: color-mix(in oklab, var(--accent) 30%, transparent);
+        color: var(--fg);
+        border-radius: 999px;
+        padding: 0.4rem 0.75rem;
+        font-weight: 800;
+        min-width: 64px;
+        text-align: center;
+        box-shadow: inset 0 1px 0 color-mix(in oklab, var(--fg) 12%, transparent);
+      }
+
+      #maxSum {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+
+      .quick-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .chip {
+        border: none;
+        border-radius: 12px;
+        padding: 0.55rem 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        background: color-mix(in oklab, var(--fg) 9%, transparent);
+        box-shadow: 0 6px 14px color-mix(in oklab, var(--fg) 18%, transparent);
+      }
+
+      .chip:active { transform: translateY(1px); }
+      .chip.wide { width: 100%; text-align: center; }
+
+      .play-area {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .equation {
+        display: grid;
+        justify-items: center;
+        gap: 0.75rem;
+        padding: clamp(1rem, 3vw, 1.4rem);
+        border-radius: 20px;
+        background: linear-gradient(135deg,
+                    color-mix(in oklab, var(--accent) 18%, transparent),
+                    color-mix(in oklab, var(--fg) 4%, transparent));
+        border: 2px solid color-mix(in oklab, var(--accent) 30%, transparent);
+      }
+
+      .equation-row {
+        display: flex;
+        align-items: center;
+        gap: clamp(0.35rem, 2vw, 1rem);
+        font-weight: 800;
+        font-size: clamp(2.5rem, 10vw, 4.5rem);
+      }
+
+      #answerBox {
+        min-width: clamp(4rem, 16vw, 6.5rem);
+        min-height: clamp(4rem, 16vw, 6.5rem);
+        border-radius: 16px;
+        border: 3px dashed color-mix(in oklab, var(--fg) 30%, transparent);
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.4);
+        box-shadow: inset 0 4px 12px color-mix(in oklab, var(--fg) 12%, transparent);
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .action {
+        border: none;
+        border-radius: 16px;
+        padding: 1rem;
+        font-weight: 800;
+        font-size: clamp(1.2rem, 3.6vw, 1.5rem);
+        cursor: pointer;
+        box-shadow: 0 10px 22px color-mix(in oklab, var(--fg) 18%, transparent);
+      }
+
+      .action.primary {
+        background: linear-gradient(120deg, color-mix(in oklab, var(--accent) 80%, transparent), var(--accent));
+        color: #fff;
+      }
+
+      .action.ghost {
+        background: color-mix(in oklab, var(--fg) 12%, transparent);
+        color: var(--fg);
+      }
+
+      .keypad {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+
+      .key {
+        border: none;
+        border-radius: 18px;
+        padding: clamp(0.9rem, 3vw, 1.4rem);
+        font-size: clamp(1.8rem, 4.8vw, 2.6rem);
+        font-weight: 800;
+        background: #fef9c3;
+        color: #854d0e;
+        box-shadow: 0 10px 20px rgba(180, 83, 9, 0.16);
+        cursor: pointer;
+      }
+
+      .key.special {
+        background: #e0f2fe;
+        color: #0f172a;
+        box-shadow: 0 10px 20px rgba(59, 130, 246, 0.16);
+      }
+
+      .key:active { transform: translateY(1px); }
+
+      .feedback {
+        text-align: center;
+        font-weight: 700;
+        border-radius: 14px;
+        padding: 0.8rem 1rem;
+        background: color-mix(in oklab, var(--fg) 6%, transparent);
+        border: 2px solid color-mix(in oklab, var(--fg) 12%, transparent);
+      }
+
+      .feedback[data-state="ok"] {
+        background: color-mix(in oklab, var(--green) 20%, transparent);
+        border-color: color-mix(in oklab, var(--green) 30%, transparent);
+        color: var(--green);
+      }
+
+      .feedback[data-state="error"] {
+        background: color-mix(in oklab, var(--red) 20%, transparent);
+        border-color: color-mix(in oklab, var(--red) 30%, transparent);
+        color: var(--red);
+      }
+
+      #backBtn {
+        position: sticky;
+        top: 0.5rem;
+        align-self: start;
+        justify-self: start;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 1rem;
+        padding: 0.55rem 0.9rem;
+        border-radius: 12px;
+        background: color-mix(in oklab, var(--fg) 10%, transparent);
+        color: var(--fg);
+        box-shadow: 0 6px 14px color-mix(in oklab, var(--fg) 15%, transparent);
+      }
+
+      @media (max-width: 640px) {
+        .equation-row { font-size: clamp(2.2rem, 14vw, 3.6rem); }
+        .actions { grid-template-columns: 1fr; }
+        .control-head { align-items: flex-start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <a id="backBtn" href="index.html" aria-label="Vissza a főoldalra">⬅ Vissza</a>
+    <main>
+      <header>
+        <h1>Összeadás és kivonás</h1>
+        <p class="lead">Add meg a legnagyobb összeget, aztán gyakoroljatok nagy gombokkal.</p>
+      </header>
+
+      <section class="panel controls" aria-labelledby="maxLabel">
+        <div class="control-head">
+          <div style="display: grid; gap: 0.15rem;">
+            <span id="maxLabel" style="font-weight: 800;">Legnagyobb összeg</span>
+            <small class="hint">Az összegek és eredmények nem mennek ez fölé.</small>
+          </div>
+          <span class="badge" id="maxDisplay">10</span>
+        </div>
+        <input id="maxSum" type="range" min="5" max="30" value="10" aria-label="Legnagyobb összeg csúszka" />
+        <div class="quick-buttons" aria-label="Gyors beállítás">
+          <button class="chip" type="button" data-set="10">10</button>
+          <button class="chip" type="button" data-set="15">15</button>
+          <button class="chip" type="button" data-set="20">20</button>
+          <button class="chip" type="button" data-set="30">30</button>
+        </div>
+      </section>
+
+      <section class="panel play-area" aria-live="polite">
+        <div class="equation">
+          <div class="equation-row" aria-label="Feladat">
+            <span id="firstNum">3</span>
+            <span id="operator">+</span>
+            <span id="secondNum">4</span>
+            <span class="equals">=</span>
+            <div id="answerBox" aria-label="Válasz">?</div>
+          </div>
+          <div class="feedback" id="feedback">Írd be a választ, majd nyomd meg az Ellenőrzést.</div>
+        </div>
+
+        <div class="actions">
+          <button class="action primary" type="button" id="checkBtn">Ellenőrzés ✓</button>
+          <button class="action ghost" type="button" id="nextBtn">Új feladat ▶</button>
+        </div>
+
+        <div class="keypad" aria-label="Számgombok">
+          <button class="key" type="button" data-digit="7">7</button>
+          <button class="key" type="button" data-digit="8">8</button>
+          <button class="key" type="button" data-digit="9">9</button>
+          <button class="key" type="button" data-digit="4">4</button>
+          <button class="key" type="button" data-digit="5">5</button>
+          <button class="key" type="button" data-digit="6">6</button>
+          <button class="key" type="button" data-digit="1">1</button>
+          <button class="key" type="button" data-digit="2">2</button>
+          <button class="key" type="button" data-digit="3">3</button>
+          <button class="key special" type="button" data-digit="0">0</button>
+          <button class="key special" type="button" id="backspace">⌫</button>
+          <button class="key special" type="button" id="clear">Törlés</button>
+        </div>
+      </section>
+
+      <footer class="hint">Tippek: Előbb válaszd ki a határt, majd játszva gyakoroljatok a gyerekekkel.</footer>
+    </main>
+
+    <script>
+      (() => {
+        const maxInput = document.getElementById('maxSum');
+        const maxDisplay = document.getElementById('maxDisplay');
+        const quickButtons = document.querySelectorAll('[data-set]');
+        const firstNum = document.getElementById('firstNum');
+        const secondNum = document.getElementById('secondNum');
+        const operator = document.getElementById('operator');
+        const answerBox = document.getElementById('answerBox');
+        const feedback = document.getElementById('feedback');
+        const checkBtn = document.getElementById('checkBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const keypad = document.querySelectorAll('[data-digit]');
+        const backspaceBtn = document.getElementById('backspace');
+        const clearBtn = document.getElementById('clear');
+        const storageKey = 'egMathMax';
+
+        const state = {
+          max: parseInt(localStorage.getItem(storageKey) || maxInput.value, 10) || 10,
+          answer: '',
+          current: null,
+        };
+
+        function clampMax(val) {
+          if (Number.isNaN(val)) return 10;
+          return Math.max(5, Math.min(30, val));
+        }
+
+        function updateMax(val, { reroll = true } = {}) {
+          const safe = clampMax(val);
+          state.max = safe;
+          maxInput.value = safe;
+          maxDisplay.textContent = safe;
+          try { localStorage.setItem(storageKey, String(safe)); } catch (_) {}
+          if (reroll) newProblem();
+        }
+
+        function randInt(min, max) {
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function generateProblem() {
+          const useAddition = Math.random() < 0.55;
+          if (useAddition) {
+            const total = randInt(2, state.max);
+            const first = randInt(1, total - 1);
+            const second = total - first;
+            return { a: first, b: second, op: '+', correct: total };
+          }
+          const minuend = randInt(1, state.max);
+          const subtrahend = randInt(0, minuend);
+          return { a: minuend, b: subtrahend, op: '-', correct: minuend - subtrahend };
+        }
+
+        function setFeedback(type, message) {
+          feedback.dataset.state = type || '';
+          feedback.textContent = message;
+        }
+
+        function render() {
+          if (!state.current) return;
+          firstNum.textContent = state.current.a;
+          secondNum.textContent = state.current.b;
+          operator.textContent = state.current.op;
+          answerBox.textContent = state.answer.length ? state.answer : '?';
+        }
+
+        function newProblem() {
+          state.current = generateProblem();
+          state.answer = '';
+          setFeedback('', 'Írd be a választ, majd nyomd meg az Ellenőrzést.');
+          render();
+        }
+
+        function appendDigit(d) {
+          if (state.answer.length >= 3) return;
+          if (state.answer === '0') state.answer = '';
+          state.answer += d;
+          render();
+        }
+
+        function backspace() {
+          state.answer = state.answer.slice(0, -1);
+          render();
+        }
+
+        function clearAnswer() {
+          state.answer = '';
+          render();
+        }
+
+        function checkAnswer() {
+          if (!state.current) return;
+          if (!state.answer.length) {
+            setFeedback('error', 'Előbb írd be a választ.');
+            return;
+          }
+          const val = parseInt(state.answer, 10);
+          if (val === state.current.correct) {
+            setFeedback('ok', 'Ügyes! Helyes válasz.');
+          } else {
+            setFeedback('error', `Még egyszer! A jó megoldás: ${state.current.correct}.`);
+          }
+        }
+
+        maxInput.addEventListener('input', (e) => {
+          updateMax(parseInt(e.target.value, 10));
+        });
+
+        quickButtons.forEach(btn => {
+          btn.addEventListener('click', () => updateMax(parseInt(btn.dataset.set, 10)));
+        });
+
+        keypad.forEach(btn => {
+          btn.addEventListener('click', () => appendDigit(btn.dataset.digit));
+        });
+
+        backspaceBtn.addEventListener('click', backspace);
+        clearBtn.addEventListener('click', clearAnswer);
+        checkBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', newProblem);
+
+        window.addEventListener('keydown', (e) => {
+          const key = e.key;
+          if (key >= '0' && key <= '9') {
+            appendDigit(key);
+            return;
+          }
+          if (key === 'Backspace') {
+            backspace();
+            return;
+          }
+          if (key === 'Enter') {
+            checkAnswer();
+          }
+        });
+
+        updateMax(state.max, { reroll: false });
+        newProblem();
+      })();
+    </script>
+  </body>
+</html>
