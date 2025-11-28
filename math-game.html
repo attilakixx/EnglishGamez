@@ -15,9 +15,7 @@
       }
 
       body {
-        background: radial-gradient(800px 500px at 20% 0%, #e0f2fe 0%, transparent 60%),
-                    radial-gradient(900px 650px at 90% 10%, #ede9fe 0%, transparent 60%),
-                    var(--bg);
+        background: #fff;
         padding: clamp(1rem, 2vw, 2rem);
         align-items: flex-start;
       }
@@ -205,10 +203,9 @@
       }
 
       #backBtn {
-        position: sticky;
-        top: 0.5rem;
-        align-self: start;
-        justify-self: start;
+        position: fixed;
+        top: clamp(1rem, 2vw, 2rem);
+        left: clamp(1rem, 2vw, 2rem);
         text-decoration: none;
         font-weight: 800;
         font-size: 1rem;
@@ -217,6 +214,15 @@
         background: color-mix(in oklab, var(--fg) 10%, transparent);
         color: var(--fg);
         box-shadow: 0 6px 14px color-mix(in oklab, var(--fg) 15%, transparent);
+        z-index: 10;
+      }
+
+      footer {
+        position: static;
+        inset: auto;
+        padding: 0;
+        margin-top: 0.25rem;
+        text-align: left;
       }
 
       @media (max-width: 640px) {
