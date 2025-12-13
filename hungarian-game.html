@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Magyar szókirakó • Hungarian Letter Game</title>
+    <style>
+      :root {
+        --bg: #fdf5e6;
+        --fg: #0f172a;
+        --muted: #475569;
+        --card: #ffffff;
+        --accent: #f97316;
+        --accent-2: #22c55e;
+        --shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Nunito", "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+        background:
+          radial-gradient(1200px 600px at 110% 0%, #ffe8d2 0%, transparent 60%),
+          radial-gradient(900px 520px at -5% 110%, #dcfce7 0%, transparent 58%),
+          var(--bg);
+        color: var(--fg);
+        min-height: 100vh;
+      }
+
+      a.back {
+        position: fixed;
+        inset-inline-start: 16px;
+        inset-block-start: 16px;
+        background: color-mix(in oklab, var(--fg) 10%, transparent);
+        color: var(--fg);
+        text-decoration: none;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 800;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+        z-index: 10;
+      }
+
+      main {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 48px 18px 64px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      header h1 {
+        margin: 0 0 8px;
+        font-size: clamp(32px, 5vw, 46px);
+        letter-spacing: 0.4px;
+      }
+      header p { margin: 0 0 8px; color: var(--muted); }
+
+      .panel {
+        background: var(--card);
+        border-radius: 18px;
+        padding: 18px 20px;
+        box-shadow: var(--shadow);
+      }
+      .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 10px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        font-size: 14px;
+        color: #ef4444;
+      }
+      .panel-head .tag {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #9a3412;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .toggle-grid, .keyboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+        gap: 10px;
+        width: 100%;
+      }
+
+      .toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 10px 12px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .toggle input {
+        accent-color: var(--accent);
+        width: 18px;
+        height: 18px;
+      }
+      .toggle.active {
+        border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+        box-shadow: 0 8px 16px rgba(249, 115, 22, 0.2);
+      }
+
+      .keyboard button {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 8px;
+        background: #e0f2fe;
+        color: #0f172a;
+        font-weight: 800;
+        font-size: 16px;
+        cursor: pointer;
+        box-shadow: 0 8px 14px rgba(14, 165, 233, 0.22);
+        transition: transform 100ms ease, box-shadow 100ms ease, filter 120ms ease;
+      }
+      .keyboard button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(14, 165, 233, 0.25); }
+      .keyboard button:active:not(:disabled) { transform: translateY(0); box-shadow: 0 6px 12px rgba(14, 165, 233, 0.18); }
+      .keyboard button:disabled {
+        background: #e2e8f0;
+        color: #94a3b8;
+        box-shadow: none;
+        cursor: not-allowed;
+      }
+
+      .slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        padding: 12px 4px;
+        min-height: 72px;
+      }
+      .slot {
+        min-width: 52px;
+        min-height: 58px;
+        border-radius: 12px;
+        border: 3px solid #e2e8f0;
+        display: grid;
+        place-items: center;
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        background: #f8fafc;
+        color: var(--fg);
+      }
+      .slot[data-state="right"] {
+        border-color: var(--accent-2);
+        background: #dcfce7;
+        color: #14532d;
+      }
+      .slot[data-state="wrong"] {
+        border-color: #f97316;
+        background: #fff7ed;
+        color: #9a3412;
+      }
+
+      .status {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .status[data-tone="warn"] { color: #c2410c; }
+      .status[data-tone="success"] { color: #15803d; }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .btn {
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-weight: 800;
+        font-size: 16px;
+        cursor: pointer;
+        color: white;
+        box-shadow: 0 10px 22px rgba(249, 115, 22, 0.25);
+        background: linear-gradient(120deg, var(--accent), color-mix(in oklab, var(--accent) 40%, #fcd34d));
+      }
+      .btn.secondary {
+        background: linear-gradient(120deg, #0ea5e9, #22c55e);
+        box-shadow: 0 10px 22px rgba(34, 197, 94, 0.24);
+      }
+      .btn.ghost {
+        background: #f8fafc;
+        color: var(--fg);
+        box-shadow: none;
+        border: 2px solid #e2e8f0;
+      }
+      .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .hint {
+        margin: 10px 0 0;
+        color: var(--muted);
+      }
+
+      @media (max-width: 640px) {
+        .keyboard button { padding: 12px 6px; font-size: 15px; }
+        .toggle-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+        .toggle { padding: 10px 10px; }
+        .slot { min-width: 44px; min-height: 50px; font-size: 22px; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="back" href="index.html" aria-label="Vissza a főmenübe">◀ Vissza</a>
+    <main>
+      <header>
+        <h1>Magyar szókirakó</h1>
+        <p>Válaszd ki, melyik betűkkel szeretnél gyakorolni. Kérj egy új szót, hallgasd meg, majd betűnként írd be a hiányzó helyekre.</p>
+        <p class="hint">Ha minden betű stimmel, nyertél – jöhet a következő szó!</p>
+      </header>
+
+      <section class="panel" aria-labelledby="lettersTitle">
+        <div class="panel-head">
+          <span id="lettersTitle">Használt betűk</span>
+          <span class="tag">Magyar ábécé</span>
+        </div>
+        <div id="toggleGrid" class="toggle-grid" role="group" aria-label="Betűválasztó"></div>
+        <div class="actions">
+          <button id="generateBtn" class="btn" type="button">Új szó kérése</button>
+          <button id="speakBtn" class="btn secondary" type="button" disabled>🔊 Mondd ki</button>
+          <button id="resetSelection" class="btn ghost" type="button">Összes betű be</button>
+          <button id="clearSelection" class="btn ghost" type="button">Minden betű ki</button>
+        </div>
+        <p class="hint">Kapcsold ki azokat a betűket, amelyeket most nem szeretnél használni. A játék csak olyan szót ad, ami az engedélyezett betűkből áll.</p>
+      </section>
+
+      <section class="panel" aria-live="polite">
+        <div class="panel-head">
+          <span>Aktuális szó</span>
+          <span class="tag" id="lengthTag">0 betű</span>
+        </div>
+        <div id="slots" class="slots" aria-label="Hiányzó betűk">
+          <span class="slot">_</span>
+          <span class="slot">_</span>
+          <span class="slot">_</span>
+          <span class="slot">_</span>
+        </div>
+        <p id="status" class="status">Válaszd ki a betűket, majd kattints az „Új szó kérése” gombra.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="keyboardTitle">
+        <div class="panel-head">
+          <span id="keyboardTitle">Betűgombok</span>
+          <span class="tag">Írd be sorban</span>
+        </div>
+        <div id="keyboard" class="keyboard" role="group" aria-label="Betűk"></div>
+        <div class="actions">
+          <button id="undoBtn" class="btn ghost" type="button">⌫ Vissza egyet</button>
+          <button id="clearBtn" class="btn ghost" type="button">Sor törlése</button>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const alphabet = [
+        'a','á','b','c','cs','d','dz','dzs','e','é','f','g','gy','h','i','í','j','k','l','ly','m','n','ny',
+        'o','ó','ö','ő','p','q','r','s','sz','t','ty','u','ú','ü','ű','v','w','x','y','z','zs'
+      ];
+
+      const words = [
+        'alma','fa','ház','szék','asztal','ceruza','füzet','iskola','táska','kocka','csiga','nyúl','ló','kenyér','tej','vaj','tó','dió','víz','tűz',
+        'őz','hó','szár','szőlő','ősz','méz','híd','felhő','gomba','gyertya','kő','gyerek','barát','anya','apa','nagyi','kakas','tyúk','liba','róka',
+        'tányér','kanál','villa','pohár','csésze','kép','fal','polc','kert','virág','rózsa','erdő','tél','nyár','tavasz','bolygó','fű','űr','sűrű','tű',
+        'lyuk','gólya','zsiráf','zseb','dzsem','dzsungel','fenyő','borjú','zsalu','gyufa','köd','feladat','szóda','római','béka','csapat','meggy','szél','edzés'
+      ];
+
+      const toggleGrid = document.getElementById('toggleGrid');
+      const keyboard = document.getElementById('keyboard');
+      const slotsEl = document.getElementById('slots');
+      const statusEl = document.getElementById('status');
+      const lengthTag = document.getElementById('lengthTag');
+      const speakBtn = document.getElementById('speakBtn');
+      const generateBtn = document.getElementById('generateBtn');
+      const undoBtn = document.getElementById('undoBtn');
+      const clearBtn = document.getElementById('clearBtn');
+      const resetSelectionBtn = document.getElementById('resetSelection');
+      const clearSelectionBtn = document.getElementById('clearSelection');
+      const storageKey = 'huLetterChoice';
+
+      let selectedLetters = new Set(alphabet);
+      let currentWord = '';
+      let currentTokens = [];
+      let guess = [];
+      let cachedVoice = null;
+
+      function splitIntoLetters(word) {
+        const lower = word.toLowerCase();
+        const tokens = [];
+        let i = 0;
+        while (i < lower.length) {
+          if (lower.startsWith('dzs', i)) { tokens.push('dzs'); i += 3; continue; }
+          const pair = lower.slice(i, i + 2);
+          if (['cs','dz','gy','ly','ny','sz','ty','zs'].includes(pair)) { tokens.push(pair); i += 2; continue; }
+          tokens.push(lower[i]);
+          i += 1;
+        }
+        return tokens;
+      }
+
+      function loadSelection() {
+        try {
+          const raw = localStorage.getItem(storageKey);
+          if (!raw) return;
+          const arr = JSON.parse(raw);
+          if (Array.isArray(arr)) {
+            const valid = arr.filter(l => alphabet.includes(l));
+            if (valid.length) selectedLetters = new Set(valid);
+          }
+        } catch {}
+      }
+
+      function saveSelection() {
+        try { localStorage.setItem(storageKey, JSON.stringify([...selectedLetters])); } catch {}
+      }
+
+      function updateStatus(text, tone = 'muted') {
+        statusEl.textContent = text;
+        statusEl.dataset.tone = tone;
+      }
+
+      function renderToggles() {
+        toggleGrid.innerHTML = '';
+        alphabet.forEach(letter => {
+          const label = document.createElement('label');
+          label.className = 'toggle' + (selectedLetters.has(letter) ? ' active' : '');
+          label.title = `Engedélyezett: ${letter.toUpperCase()}`;
+
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.value = letter;
+          input.checked = selectedLetters.has(letter);
+          input.addEventListener('change', () => {
+            if (input.checked) selectedLetters.add(letter);
+            else selectedLetters.delete(letter);
+            saveSelection();
+            renderToggles();
+            renderKeyboard();
+            generateBtn.disabled = !selectedLetters.size;
+          });
+
+          const span = document.createElement('span');
+          span.textContent = letter.toUpperCase();
+
+          label.appendChild(input);
+          label.appendChild(span);
+          toggleGrid.appendChild(label);
+        });
+        generateBtn.disabled = !selectedLetters.size;
+      }
+
+      function renderKeyboard() {
+        keyboard.innerHTML = '';
+        const disabled = !currentTokens.length;
+        alphabet.forEach(letter => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = letter.toUpperCase();
+          btn.dataset.letter = letter;
+          btn.disabled = disabled || !selectedLetters.has(letter) || guess.length >= currentTokens.length;
+          btn.addEventListener('click', () => handleLetter(letter));
+          keyboard.appendChild(btn);
+        });
+      }
+
+      function renderSlots() {
+        slotsEl.innerHTML = '';
+        if (!currentTokens.length) {
+          ['_','_','_','_'].forEach(val => {
+            const span = document.createElement('span');
+            span.className = 'slot';
+            span.textContent = val;
+            slotsEl.appendChild(span);
+          });
+          lengthTag.textContent = '0 betű';
+          return;
+        }
+
+        currentTokens.forEach((letter, idx) => {
+          const span = document.createElement('span');
+          span.className = 'slot';
+          const val = guess[idx];
+          span.textContent = val ? val.toUpperCase() : '_';
+          if (val) {
+            span.dataset.state = val === letter ? 'right' : 'wrong';
+          }
+          slotsEl.appendChild(span);
+        });
+        lengthTag.textContent = `${currentTokens.length} betű`;
+        renderKeyboard();
+      }
+
+      function pickWord(allowed) {
+        const options = words.filter(w => splitIntoLetters(w).every(ch => allowed.has(ch)));
+        if (!options.length) return null;
+        if (options.length === 1) return options[0];
+        let choice = options[Math.floor(Math.random() * options.length)];
+        let tries = 0;
+        while (choice === currentWord && tries < 4) {
+          choice = options[Math.floor(Math.random() * options.length)];
+          tries += 1;
+        }
+        return choice;
+      }
+
+      function startNewWord() {
+        const allowed = new Set(selectedLetters);
+        if (!allowed.size) {
+          updateStatus('Nincs bekapcsolt betű. Válassz ki legalább egyet.', 'warn');
+          currentWord = '';
+          currentTokens = [];
+          guess = [];
+          renderSlots();
+          speakBtn.disabled = true;
+          return;
+        }
+        const word = pickWord(allowed);
+        if (!word) {
+          updateStatus('Nincs olyan szó, ami ezekből a betűkből áll. Kapcsold be még néhányat.', 'warn');
+          currentWord = '';
+          currentTokens = [];
+          guess = [];
+          renderSlots();
+          speakBtn.disabled = true;
+          return;
+        }
+        currentWord = word;
+        currentTokens = splitIntoLetters(word);
+        guess = [];
+        speakBtn.disabled = false;
+        updateStatus(`Találd ki! ${currentTokens.length} betűből áll.`, 'muted');
+        renderSlots();
+      }
+
+      function handleLetter(letter) {
+        if (!currentTokens.length) {
+          updateStatus('Először kérj egy új szót!', 'warn');
+          return;
+        }
+        if (guess.length >= currentTokens.length) return;
+        guess.push(letter);
+        renderSlots();
+        if (guess.length === currentTokens.length) checkResult();
+      }
+
+      function checkResult() {
+        const success = guess.every((l, i) => l === currentTokens[i]);
+        if (success) {
+          updateStatus('Ügyes! Minden betű jó. Kérj új szót a következő körhöz.', 'success');
+        } else {
+          updateStatus('Van benne hiba. Törölj egyet, vagy kezdd újra.', 'warn');
+        }
+      }
+
+      function undo() {
+        if (!guess.length) return;
+        guess.pop();
+        renderSlots();
+        updateStatus('Írd be a következő betűt!', 'muted');
+      }
+
+      function clearGuess() {
+        if (!currentTokens.length) return;
+        guess = [];
+        renderSlots();
+        updateStatus('Kezdd elölről ugyanazt a szót.', 'muted');
+      }
+
+      function pickHungarianVoice(forceRefresh = false) {
+        try {
+          if (cachedVoice && !forceRefresh) {
+            const lang = (cachedVoice.lang || '').toLowerCase();
+            if (lang.startsWith('hu')) return cachedVoice;
+          }
+          const voices = speechSynthesis.getVoices();
+          if (!voices || !voices.length) return null;
+          const langHu = voices.find(v => (v.lang || '').toLowerCase().startsWith('hu'));
+          if (langHu) return langHu;
+          const nameHu = voices.find(v => (v.name || '').toLowerCase().includes('hungarian'));
+          if (nameHu) return nameHu;
+          const containsHu = voices.find(v => (v.lang || '').toLowerCase().includes('hu'));
+          return containsHu || null;
+        } catch { return null; }
+      }
+
+      function speakWord() {
+        if (!currentWord) return;
+        try {
+          if (!('speechSynthesis' in window)) return;
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(currentWord);
+          const voice = pickHungarianVoice(true);
+          if (voice) {
+            cachedVoice = voice;
+            utter.voice = voice;
+            utter.lang = voice.lang || 'hu-HU';
+          } else {
+            utter.lang = 'hu-HU'; // force Hungarian accent even if no specific voice is installed
+            updateStatus('Nem találtam magyar hangot a böngészőben. Telepíts magyar TTS hangot a rendszerbe a pontos kiejtéshez.', 'warn');
+          }
+          utter.rate = 0.95;
+          utter.pitch = 1.0;
+          speechSynthesis.speak(utter);
+        } catch {}
+      }
+
+      // Init
+      loadSelection();
+      renderToggles();
+      renderKeyboard();
+      generateBtn.addEventListener('click', startNewWord);
+      speakBtn.addEventListener('click', speakWord);
+      undoBtn.addEventListener('click', undo);
+      clearBtn.addEventListener('click', clearGuess);
+      resetSelectionBtn.addEventListener('click', () => {
+        selectedLetters = new Set(alphabet);
+        saveSelection();
+        renderToggles();
+        renderKeyboard();
+        generateBtn.disabled = false;
+      });
+      clearSelectionBtn.addEventListener('click', () => {
+        selectedLetters = new Set();
+        saveSelection();
+        renderToggles();
+        renderKeyboard();
+        generateBtn.disabled = true;
+        updateStatus('Minden betű kikapcsolva. Kapcsold be, majd kérj új szót.', 'warn');
+      });
+      if ('speechSynthesis' in window) {
+        const warmVoices = (retries = 4) => {
+          pickHungarianVoice(true);
+          const hasVoices = speechSynthesis.getVoices().length;
+          if (!hasVoices && retries > 0) {
+            setTimeout(() => warmVoices(retries - 1), 200);
+          }
+        };
+        window.speechSynthesis.addEventListener('voiceschanged', () => {
+          cachedVoice = pickHungarianVoice(true);
+        });
+        warmVoices();
+      }
+    </script>
+  </body>
+</html>
