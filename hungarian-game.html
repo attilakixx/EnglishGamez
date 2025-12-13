@@ -212,6 +212,23 @@
         color: var(--muted);
       }
 
+      .word-input {
+        width: 100%;
+        min-height: 140px;
+        border-radius: 12px;
+        border: 2px solid #e2e8f0;
+        background: #f8fafc;
+        padding: 12px;
+        font-size: 15px;
+        font-family: inherit;
+        resize: vertical;
+      }
+      .word-input:focus {
+        outline: none;
+        border-color: color-mix(in oklab, var(--accent) 45%, transparent);
+        box-shadow: 0 10px 20px rgba(249, 115, 22, 0.15);
+      }
+
       @media (max-width: 640px) {
         .keyboard button { padding: 12px 6px; font-size: 15px; }
         .toggle-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
@@ -222,6 +239,7 @@
   </head>
   <body>
     <a class="back" href="index.html" aria-label="Vissza a főmenübe">◀ Vissza</a>
+    <script src="magyar_szavak/words.js"></script>
     <main>
       <header>
         <h1>Magyar szókirakó</h1>
@@ -242,6 +260,22 @@
           <button id="clearSelection" class="btn ghost" type="button">Minden betű ki</button>
         </div>
         <p class="hint">Kapcsold ki azokat a betűket, amelyeket most nem szeretnél használni. A játék csak olyan szót ad, ami az engedélyezett betűkből áll.</p>
+      </section>
+
+      <section class="panel" aria-labelledby="customTitle">
+        <div class="panel-head">
+          <span id="customTitle">Saját szólista (opcionális)</span>
+          <span class="tag">TXT / JSON</span>
+        </div>
+        <p class="hint">Minden sor egy szó, vagy adj meg egy JSON tömböt (pl. ["alma","szék","tűz"]). Ha üresen hagyod, a beépített lista marad.</p>
+        <textarea id="customList" class="word-input" placeholder="pl.:\nalma\nszél\nszék"></textarea>
+        <div class="actions">
+          <label for="wordFile" class="btn ghost" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">📂 Fájl betöltése</label>
+          <input type="file" id="wordFile" accept=".txt,.json,text/plain,application/json" hidden />
+          <button id="applyCustom" class="btn" type="button">Saját szólista használata</button>
+          <button id="clearCustom" class="btn ghost" type="button">Vissza a gyári listára</button>
+        </div>
+        <p id="customStatus" class="status">Ha nem adsz meg listát, a beépített szavak maradnak.</p>
       </section>
 
       <section class="panel" aria-live="polite">
@@ -277,12 +311,14 @@
         'o','ó','ö','ő','p','q','r','s','sz','t','ty','u','ú','ü','ű','v','w','x','y','z','zs'
       ];
 
-      const words = [
+      let defaultWords = [];
+      const fallbackWords = Array.isArray(window.HU_WORDS) ? window.HU_WORDS : [
         'alma','fa','ház','szék','asztal','ceruza','füzet','iskola','táska','kocka','csiga','nyúl','ló','kenyér','tej','vaj','tó','dió','víz','tűz',
         'őz','hó','szár','szőlő','ősz','méz','híd','felhő','gomba','gyertya','kő','gyerek','barát','anya','apa','nagyi','kakas','tyúk','liba','róka',
         'tányér','kanál','villa','pohár','csésze','kép','fal','polc','kert','virág','rózsa','erdő','tél','nyár','tavasz','bolygó','fű','űr','sűrű','tű',
         'lyuk','gólya','zsiráf','zseb','dzsem','dzsungel','fenyő','borjú','zsalu','gyufa','köd','feladat','szóda','római','béka','csapat','meggy','szél','edzés'
       ];
+      let customWords = [];
 
       const toggleGrid = document.getElementById('toggleGrid');
       const keyboard = document.getElementById('keyboard');
@@ -295,6 +331,11 @@
       const clearBtn = document.getElementById('clearBtn');
       const resetSelectionBtn = document.getElementById('resetSelection');
       const clearSelectionBtn = document.getElementById('clearSelection');
+      const customTextArea = document.getElementById('customList');
+      const customStatus = document.getElementById('customStatus');
+      const wordFileInput = document.getElementById('wordFile');
+      const applyCustomBtn = document.getElementById('applyCustom');
+      const clearCustomBtn = document.getElementById('clearCustom');
       const storageKey = 'huLetterChoice';
 
       let selectedLetters = new Set(alphabet);
@@ -302,6 +343,14 @@
       let currentTokens = [];
       let guess = [];
       let cachedVoice = null;
+
+      function resetRoundState() {
+        currentWord = '';
+        currentTokens = [];
+        guess = [];
+        renderSlots();
+        speakBtn.disabled = true;
+      }
 
       function splitIntoLetters(word) {
         const lower = word.toLowerCase();
@@ -315,6 +364,63 @@
           i += 1;
         }
         return tokens;
+      }
+
+      function normalizeWordList(raw) {
+        if (!raw) return [];
+        let arr = [];
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) arr = parsed;
+        } catch {
+          /* fall through to newline split */
+        }
+        if (!arr.length) arr = raw.split(/\r?\n/);
+        return arr
+          .map(v => (v == null ? '' : String(v)).trim().toLowerCase())
+          .filter(Boolean);
+      }
+
+      function filterValidWords(list) {
+        const seen = new Set();
+        const valid = [];
+        list.forEach(w => {
+          const letters = splitIntoLetters(w);
+          if (!letters.length) return;
+          const ok = letters.every(ch => alphabet.includes(ch));
+          if (!ok) return;
+          if (seen.has(w)) return;
+          seen.add(w);
+          valid.push(w);
+        });
+        return valid;
+      }
+
+      function updateCustomStatus(text, tone = 'muted') {
+        customStatus.textContent = text;
+        customStatus.dataset.tone = tone;
+      }
+
+      function setCustomWords(raw, sourceLabel = 'szólista') {
+        const normalized = normalizeWordList(raw);
+        const valid = filterValidWords(normalized);
+        customWords = valid;
+        if (!valid.length) {
+          updateCustomStatus('Nem találtam érvényes szót. A beépített lista marad.', 'warn');
+          return;
+        }
+        updateCustomStatus(`Betöltve ${valid.length} szó (${sourceLabel}). Kattints az „Új szó kérése” gombra.`, 'success');
+      }
+
+      function getWordPool() {
+        return customWords.length ? customWords : defaultWords;
+      }
+
+      function loadDefaultWordsFromFile() {
+        defaultWords = filterValidWords(fallbackWords);
+        const label = Array.isArray(window.HU_WORDS) ? 'magyar_szavak/words.js (a TXT-ből generálva)' : 'beépített mini lista';
+        updateStatus(`Betöltve ${defaultWords.length} szó (${label}).`, 'muted');
+        generateBtn.disabled = !selectedLetters.size;
       }
 
       function loadSelection() {
@@ -410,7 +516,8 @@
       }
 
       function pickWord(allowed) {
-        const options = words.filter(w => splitIntoLetters(w).every(ch => allowed.has(ch)));
+        const pool = getWordPool();
+        const options = pool.filter(w => splitIntoLetters(w).every(ch => allowed.has(ch)));
         if (!options.length) return null;
         if (options.length === 1) return options[0];
         let choice = options[Math.floor(Math.random() * options.length)];
@@ -423,6 +530,10 @@
       }
 
       function startNewWord() {
+        if (!getWordPool().length) {
+          updateStatus('Még nincs szólista betöltve. Várj egy pillanatot, vagy adj meg saját listát.', 'warn');
+          return;
+        }
         const allowed = new Set(selectedLetters);
         if (!allowed.size) {
           updateStatus('Nincs bekapcsolt betű. Válassz ki legalább egyet.', 'warn');
@@ -527,6 +638,7 @@
       loadSelection();
       renderToggles();
       renderKeyboard();
+      loadDefaultWordsFromFile();
       generateBtn.addEventListener('click', startNewWord);
       speakBtn.addEventListener('click', speakWord);
       undoBtn.addEventListener('click', undo);
@@ -545,6 +657,38 @@
         renderKeyboard();
         generateBtn.disabled = true;
         updateStatus('Minden betű kikapcsolva. Kapcsold be, majd kérj új szót.', 'warn');
+      });
+      applyCustomBtn.addEventListener('click', () => {
+        setCustomWords(customTextArea.value, 'szöveg');
+        resetRoundState();
+        if (customWords.length) {
+          updateStatus('Saját szólista betöltve. Kattints az „Új szó kérése” gombra.', 'muted');
+        } else {
+          updateStatus('Nem sikerült betölteni a saját listát, a beépített marad.', 'warn');
+        }
+      });
+      clearCustomBtn.addEventListener('click', () => {
+        customWords = [];
+        updateCustomStatus('Visszatértél a beépített szavakhoz.', 'muted');
+        resetRoundState();
+        updateStatus('Gyári szólista aktív. Kattints az „Új szó kérése” gombra.', 'muted');
+      });
+      wordFileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const text = String(reader.result || '');
+          customTextArea.value = text;
+          setCustomWords(text, file.name);
+          resetRoundState();
+          if (customWords.length) {
+            updateStatus('Fájlból betöltött lista aktív. Kattints az „Új szó kérése” gombra.', 'muted');
+          } else {
+            updateStatus('Nem sikerült érvényes szavakat találni ebben a fájlban. A gyári lista marad.', 'warn');
+          }
+        };
+        reader.readAsText(file);
       });
       if ('speechSynthesis' in window) {
         const warmVoices = (retries = 4) => {
