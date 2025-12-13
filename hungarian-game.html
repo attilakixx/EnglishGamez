@@ -84,6 +84,44 @@
         font-size: 12px;
         font-weight: 800;
       }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff7ed;
+        color: #9a3412;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .length-control {
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .length-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+      }
+      .length-input {
+        width: 100%;
+        accent-color: var(--accent);
+      }
+      .length-note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
 
       .toggle-grid, .keyboard {
         display: grid;
@@ -253,6 +291,22 @@
           <span class="tag">Magyar ábécé</span>
         </div>
         <div id="toggleGrid" class="toggle-grid" role="group" aria-label="Betűválasztó"></div>
+        <div class="length-control" aria-label="Maximális szóhossz">
+          <div class="length-head">
+            <span>Max szóhossz</span>
+            <span id="maxLengthDisplay" class="pill">12 betű</span>
+          </div>
+          <input
+            id="maxLength"
+            class="length-input"
+            type="range"
+            min="2"
+            max="20"
+            value="12"
+            aria-label="Legfeljebb ennyi betűs szavakat adjon a játék"
+          />
+          <p class="length-note">A játék csak legfeljebb ennyi betűs szót választ.</p>
+        </div>
         <div class="actions">
           <button id="generateBtn" class="btn" type="button">Új szó kérése</button>
           <button id="speakBtn" class="btn secondary" type="button" disabled>🔊 Mondd ki</button>
@@ -290,6 +344,9 @@
           <span class="slot">_</span>
         </div>
         <p id="status" class="status">Válaszd ki a betűket, majd kattints az „Új szó kérése” gombra.</p>
+        <div class="actions">
+          <button id="revealBtn" class="btn ghost" type="button" disabled>Mutasd a szót</button>
+        </div>
       </section>
 
       <section class="panel" aria-labelledby="keyboardTitle">
@@ -331,17 +388,24 @@
       const clearBtn = document.getElementById('clearBtn');
       const resetSelectionBtn = document.getElementById('resetSelection');
       const clearSelectionBtn = document.getElementById('clearSelection');
+      const revealBtn = document.getElementById('revealBtn');
       const customTextArea = document.getElementById('customList');
       const customStatus = document.getElementById('customStatus');
       const wordFileInput = document.getElementById('wordFile');
       const applyCustomBtn = document.getElementById('applyCustom');
       const clearCustomBtn = document.getElementById('clearCustom');
       const storageKey = 'huLetterChoice';
+      const maxLengthInput = document.getElementById('maxLength');
+      const maxLengthDisplay = document.getElementById('maxLengthDisplay');
+      const maxLengthStorageKey = 'huMaxWordLength';
+      const maxLengthBounds = { min: 2, max: 20 };
+      const defaultMaxWordLength = 12;
 
       let selectedLetters = new Set(alphabet);
       let currentWord = '';
       let currentTokens = [];
       let guess = [];
+      let maxWordLength = defaultMaxWordLength;
       let cachedVoice = null;
 
       function resetRoundState() {
@@ -350,6 +414,7 @@
         guess = [];
         renderSlots();
         speakBtn.disabled = true;
+        revealBtn.disabled = true;
       }
 
       function splitIntoLetters(word) {
@@ -394,6 +459,34 @@
           valid.push(w);
         });
         return valid;
+      }
+
+      function clampMaxWordLength(val) {
+        const num = Number(val);
+        if (!Number.isFinite(num)) return defaultMaxWordLength;
+        return Math.min(maxLengthBounds.max, Math.max(maxLengthBounds.min, Math.round(num)));
+      }
+
+      function syncMaxLengthDisplay() {
+        maxLengthDisplay.textContent = `${maxWordLength} betű`;
+        maxLengthInput.value = maxWordLength;
+      }
+
+      function loadMaxLength() {
+        let fromStorage = defaultMaxWordLength;
+        try {
+          const raw = localStorage.getItem(maxLengthStorageKey);
+          if (raw != null) {
+            const parsed = clampMaxWordLength(parseInt(raw, 10));
+            if (!Number.isNaN(parsed)) fromStorage = parsed;
+          }
+        } catch {}
+        maxWordLength = clampMaxWordLength(fromStorage);
+        syncMaxLengthDisplay();
+      }
+
+      function saveMaxLength() {
+        try { localStorage.setItem(maxLengthStorageKey, String(maxWordLength)); } catch {}
       }
 
       function updateCustomStatus(text, tone = 'muted') {
@@ -498,6 +591,7 @@
             slotsEl.appendChild(span);
           });
           lengthTag.textContent = '0 betű';
+          renderKeyboard();
           return;
         }
 
@@ -515,9 +609,13 @@
         renderKeyboard();
       }
 
-      function pickWord(allowed) {
+      function pickWord(allowed, maxLen = maxWordLength) {
+        const limit = clampMaxWordLength(maxLen || defaultMaxWordLength);
         const pool = getWordPool();
-        const options = pool.filter(w => splitIntoLetters(w).every(ch => allowed.has(ch)));
+        const options = pool.filter(w => {
+          const letters = splitIntoLetters(w);
+          return letters.length && letters.length <= limit && letters.every(ch => allowed.has(ch));
+        });
         if (!options.length) return null;
         if (options.length === 1) return options[0];
         let choice = options[Math.floor(Math.random() * options.length)];
@@ -542,22 +640,25 @@
           guess = [];
           renderSlots();
           speakBtn.disabled = true;
+          revealBtn.disabled = true;
           return;
         }
-        const word = pickWord(allowed);
+        const word = pickWord(allowed, maxWordLength);
         if (!word) {
-          updateStatus('Nincs olyan szó, ami ezekből a betűkből áll. Kapcsold be még néhányat.', 'warn');
+          updateStatus(`Nincs olyan szó, ami ezekből a betűkből áll és belefér a ${maxWordLength} betűs limitbe. Kapcsold be még néhányat, vagy emeld a maximális hosszát.`, 'warn');
           currentWord = '';
           currentTokens = [];
           guess = [];
           renderSlots();
           speakBtn.disabled = true;
+          revealBtn.disabled = true;
           return;
         }
         currentWord = word;
         currentTokens = splitIntoLetters(word);
         guess = [];
         speakBtn.disabled = false;
+        revealBtn.disabled = false;
         updateStatus(`Találd ki! ${currentTokens.length} betűből áll.`, 'muted');
         renderSlots();
       }
@@ -580,6 +681,16 @@
         } else {
           updateStatus('Van benne hiba. Törölj egyet, vagy kezdd újra.', 'warn');
         }
+      }
+
+      function revealWord() {
+        if (!currentWord || !currentTokens.length) {
+          updateStatus('Először kérj egy új szót, utána tudod felfedni.', 'warn');
+          return;
+        }
+        guess = [...currentTokens];
+        renderSlots();
+        updateStatus(`A szó: ${currentWord.toUpperCase()}. Kérj új szót vagy töröld a sort.`, 'success');
       }
 
       function undo() {
@@ -635,6 +746,7 @@
       }
 
       // Init
+      loadMaxLength();
       loadSelection();
       renderToggles();
       renderKeyboard();
@@ -643,6 +755,7 @@
       speakBtn.addEventListener('click', speakWord);
       undoBtn.addEventListener('click', undo);
       clearBtn.addEventListener('click', clearGuess);
+      revealBtn.addEventListener('click', revealWord);
       resetSelectionBtn.addEventListener('click', () => {
         selectedLetters = new Set(alphabet);
         saveSelection();
@@ -689,6 +802,18 @@
           }
         };
         reader.readAsText(file);
+      });
+      maxLengthInput.addEventListener('input', (e) => {
+        const previous = maxWordLength;
+        maxWordLength = clampMaxWordLength(parseInt(e.target.value, 10));
+        syncMaxLengthDisplay();
+        saveMaxLength();
+        if (currentTokens.length && currentTokens.length > maxWordLength) {
+          resetRoundState();
+          updateStatus('Csökkentetted a max szóhosszt. Kérj új szót az új korláttal.', 'warn');
+        } else if (maxWordLength !== previous && !currentTokens.length) {
+          updateStatus(`Legfeljebb ${maxWordLength} betűs szavakat kapsz. Kattints az „Új szó kérése” gombra.`, 'muted');
+        }
       });
       if ('speechSynthesis' in window) {
         const warmVoices = (retries = 4) => {
