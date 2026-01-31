@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dice + Colors</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Space+Mono:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #fef3c7;
+        --bg-2: #fde68a;
+        --card: #fff8ed;
+        --ink: #1f2937;
+        --muted: #6b7280;
+        --accent: #ef4444;
+        --accent-2: #0ea5e9;
+        --shadow: 0 18px 35px rgba(30, 41, 59, 0.18);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        font-family: "Baloo 2", "Trebuchet MS", sans-serif;
+        background:
+          radial-gradient(1200px 600px at -10% 20%, #fef9c3 0%, transparent 65%),
+          radial-gradient(1000px 700px at 110% -10%, #bfdbfe 0%, transparent 60%),
+          linear-gradient(135deg, var(--bg), var(--bg-2));
+        color: var(--ink);
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+
+      .page {
+        width: min(1100px, 100%);
+      }
+
+      .back {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--ink);
+        font-weight: 800;
+        background: #fff;
+        padding: 10px 16px;
+        border-radius: 999px;
+        box-shadow: 0 6px 0 rgba(15, 23, 42, 0.12);
+        border: 3px solid #f59e0b;
+      }
+
+      header {
+        margin: 18px 0 22px;
+      }
+
+      h1 {
+        margin: 0 0 6px;
+        font-size: clamp(30px, 6vw, 50px);
+        letter-spacing: 0.5px;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(16px, 2.4vw, 20px);
+      }
+
+      .panel {
+        background: var(--card);
+        border-radius: 26px;
+        box-shadow: var(--shadow);
+        padding: clamp(20px, 3vw, 32px);
+        display: grid;
+        gap: 28px;
+      }
+
+      @media (min-width: 900px) {
+        .panel {
+          grid-template-columns: 1.1fr 0.9fr;
+          align-items: stretch;
+        }
+      }
+
+      .controls {
+        display: grid;
+        gap: 18px;
+      }
+
+      .range {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+        border-radius: 18px;
+        background: #fff;
+        border: 3px solid #fde68a;
+      }
+
+      .range-row {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+
+      label {
+        font-weight: 800;
+        color: #374151;
+      }
+
+      input[type="number"] {
+        font-family: "Space Mono", "Courier New", monospace;
+        font-size: 20px;
+        font-weight: 700;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 3px solid #fed7aa;
+        background: #fff7ed;
+      }
+
+      .preset-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .preset-row button {
+        font-family: "Baloo 2", "Trebuchet MS", sans-serif;
+        font-weight: 800;
+        padding: 8px 14px;
+        border-radius: 12px;
+        border: 2px solid #93c5fd;
+        background: #e0f2fe;
+        cursor: pointer;
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 800;
+      }
+
+      .toggle input { transform: scale(1.3); }
+
+      .color-picker {
+        background: #fff;
+        border-radius: 18px;
+        border: 3px solid #ddd6fe;
+        padding: 16px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .color-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 10px;
+      }
+
+      .color-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 8px 10px;
+        border: 2px solid transparent;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .color-option input {
+        margin: 0;
+      }
+
+      .color-option:has(input:checked) {
+        border-color: #93c5fd;
+        background: #eff6ff;
+      }
+
+      .dot {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--sw);
+        border: 2px solid #111827;
+      }
+
+      .color-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .color-actions button {
+        font-family: "Baloo 2", "Trebuchet MS", sans-serif;
+        font-weight: 700;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 2px dashed #f472b6;
+        background: #fff0f6;
+        cursor: pointer;
+      }
+
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .actions button {
+        flex: 1 1 160px;
+        font-family: "Baloo 2", "Trebuchet MS", sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        padding: 14px 18px;
+        border-radius: 16px;
+        border: 4px solid #111827;
+        cursor: pointer;
+        box-shadow: 0 6px 0 rgba(15, 23, 42, 0.2);
+      }
+
+      .actions .roll {
+        background: #fde047;
+      }
+
+      .actions .reset {
+        background: #e2e8f0;
+      }
+
+      .status {
+        margin: 0;
+        color: var(--muted);
+        min-height: 24px;
+        font-weight: 700;
+      }
+
+      .results {
+        display: grid;
+        gap: 18px;
+        background: #fff;
+        border-radius: 20px;
+        border: 3px solid #bae6fd;
+        padding: 18px;
+        align-content: start;
+      }
+
+      .result-card {
+        background: #fefce8;
+        border-radius: 18px;
+        padding: 16px;
+        text-align: center;
+        border: 3px solid #facc15;
+      }
+
+      .result-label {
+        font-weight: 800;
+        color: #7c2d12;
+        letter-spacing: 0.4px;
+      }
+
+      .number-output {
+        font-family: "Space Mono", "Courier New", monospace;
+        font-size: clamp(48px, 10vw, 82px);
+        font-weight: 700;
+        margin: 8px 0 0;
+      }
+
+      .color-output {
+        display: grid;
+        place-items: center;
+        gap: 12px;
+      }
+
+      .swatch {
+        width: 100px;
+        height: 100px;
+        border-radius: 22px;
+        border: 4px solid #111827;
+        background: #fff;
+      }
+
+      .color-name {
+        font-weight: 800;
+        font-size: 22px;
+      }
+
+      .pop {
+        animation: pop 0.35s ease;
+      }
+
+      @keyframes pop {
+        0% { transform: scale(0.96); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <a class="back" href="index.html" aria-label="Back to menu">← Back to menu</a>
+
+      <header>
+        <h1>Dice + Colors</h1>
+        <p class="subtitle">Roll a number like a dice, and optionally pick a random color.</p>
+      </header>
+
+      <section class="panel" aria-label="Random generator">
+        <div class="controls">
+          <div class="range">
+            <div class="range-row">
+              <div class="field">
+                <label for="minVal">Min number</label>
+                <input id="minVal" type="number" value="1" inputmode="numeric" />
+              </div>
+              <div class="field">
+                <label for="maxVal">Max number</label>
+                <input id="maxVal" type="number" value="6" inputmode="numeric" />
+              </div>
+            </div>
+            <div class="preset-row" aria-label="Quick dice presets">
+              <button type="button" data-min="1" data-max="6">D6</button>
+              <button type="button" data-min="1" data-max="8">D8</button>
+              <button type="button" data-min="1" data-max="10">D10</button>
+              <button type="button" data-min="1" data-max="12">D12</button>
+              <button type="button" data-min="1" data-max="20">D20</button>
+            </div>
+          </div>
+
+          <label class="toggle">
+            <input id="useColor" type="checkbox" checked />
+            Also pick a random color
+          </label>
+
+          <div class="color-picker" aria-label="Choose colors to include">
+            <strong>Choose colors</strong>
+            <div class="color-grid" id="colorGrid"></div>
+            <div class="color-actions">
+              <button type="button" id="selectAllColors">Select all</button>
+              <button type="button" id="clearColors">Clear</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="roll" id="rollBtn" type="button">Roll!</button>
+            <button class="reset" id="resetBtn" type="button">Reset</button>
+          </div>
+
+          <p class="status" id="statusMsg" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="results">
+          <div class="result-card">
+            <div class="result-label">Number</div>
+            <div class="number-output" id="numberOut">—</div>
+          </div>
+
+          <div class="result-card color-output" id="colorResult">
+            <div class="result-label">Color</div>
+            <div class="swatch" id="colorSwatch" aria-hidden="true"></div>
+            <div class="color-name" id="colorName">—</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const COLORS = [
+        { name: "Red", hex: "#ef4444" },
+        { name: "Orange", hex: "#f97316" },
+        { name: "Yellow", hex: "#facc15" },
+        { name: "Green", hex: "#22c55e" },
+        { name: "Blue", hex: "#3b82f6" },
+        { name: "Purple", hex: "#8b5cf6" },
+        { name: "Pink", hex: "#ec4899" },
+        { name: "Brown", hex: "#a16207" },
+        { name: "Black", hex: "#0f172a" },
+        { name: "White", hex: "#f8fafc" },
+        { name: "Gray", hex: "#94a3b8" }
+      ];
+
+      const STORAGE_KEY = "egRandomizerPrefs";
+
+      const minInput = document.getElementById("minVal");
+      const maxInput = document.getElementById("maxVal");
+      const useColorInput = document.getElementById("useColor");
+      const colorGrid = document.getElementById("colorGrid");
+      const numberOut = document.getElementById("numberOut");
+      const colorSwatch = document.getElementById("colorSwatch");
+      const colorName = document.getElementById("colorName");
+      const statusMsg = document.getElementById("statusMsg");
+
+      function buildColors(selectedNames) {
+        colorGrid.innerHTML = "";
+        COLORS.forEach((color, index) => {
+          const id = `color-${index}`;
+          const label = document.createElement("label");
+          label.className = "color-option";
+          label.innerHTML = `
+            <input type="checkbox" id="${id}" value="${color.name}" data-hex="${color.hex}" />
+            <span class="dot" style="--sw:${color.hex}"></span>
+            <span class="name">${color.name}</span>
+          `;
+          const input = label.querySelector("input");
+          input.checked = selectedNames.includes(color.name);
+          input.addEventListener("change", savePrefs);
+          colorGrid.appendChild(label);
+        });
+      }
+
+      function loadPrefs() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+          return {
+            min: Number.isFinite(saved.min) ? saved.min : 1,
+            max: Number.isFinite(saved.max) ? saved.max : 6,
+            useColor: typeof saved.useColor === "boolean" ? saved.useColor : true,
+            selectedColors: Array.isArray(saved.selectedColors) && saved.selectedColors.length
+              ? saved.selectedColors
+              : COLORS.map((c) => c.name)
+          };
+        } catch {
+          return { min: 1, max: 6, useColor: true, selectedColors: COLORS.map((c) => c.name) };
+        }
+      }
+
+      function savePrefs() {
+        const selectedColors = getSelectedColors();
+        const prefs = {
+          min: parseInt(minInput.value, 10),
+          max: parseInt(maxInput.value, 10),
+          useColor: useColorInput.checked,
+          selectedColors
+        };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+        } catch {}
+      }
+
+      function getSelectedColors() {
+        return Array.from(colorGrid.querySelectorAll("input[type=checkbox]:checked")).map(
+          (input) => input.value
+        );
+      }
+
+      function pickRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function animate(el) {
+        el.classList.remove("pop");
+        void el.offsetWidth;
+        el.classList.add("pop");
+      }
+
+      function updateStatus(message) {
+        statusMsg.textContent = message || "";
+      }
+
+      function roll() {
+        const min = parseInt(minInput.value, 10);
+        const max = parseInt(maxInput.value, 10);
+
+        if (!Number.isFinite(min) || !Number.isFinite(max)) {
+          updateStatus("Please enter valid numbers.");
+          return;
+        }
+
+        let low = min;
+        let high = max;
+        if (low > high) {
+          [low, high] = [high, low];
+          minInput.value = low;
+          maxInput.value = high;
+          updateStatus("Min and max were swapped to keep the range valid.");
+        } else {
+          updateStatus("");
+        }
+
+        const number = pickRandomInt(low, high);
+        numberOut.textContent = number;
+        animate(numberOut);
+
+        if (useColorInput.checked) {
+          const selected = getSelectedColors();
+          if (!selected.length) {
+            colorName.textContent = "Pick at least one color";
+            colorSwatch.style.background = "#fff";
+            updateStatus("Choose at least one color to pick from.");
+            return;
+          }
+          const choiceName = selected[pickRandomInt(0, selected.length - 1)];
+          const choice = COLORS.find((c) => c.name === choiceName);
+          colorName.textContent = choice.name;
+          colorSwatch.style.background = choice.hex;
+          animate(colorSwatch);
+          animate(colorName);
+        } else {
+          colorName.textContent = "—";
+          colorSwatch.style.background = "#fff";
+        }
+
+        savePrefs();
+      }
+
+      function resetAll() {
+        minInput.value = 1;
+        maxInput.value = 6;
+        useColorInput.checked = true;
+        buildColors(COLORS.map((c) => c.name));
+        numberOut.textContent = "—";
+        colorName.textContent = "—";
+        colorSwatch.style.background = "#fff";
+        updateStatus("Reset to dice defaults.");
+        savePrefs();
+      }
+
+      document.querySelectorAll(".preset-row button").forEach((button) => {
+        button.addEventListener("click", () => {
+          minInput.value = button.dataset.min;
+          maxInput.value = button.dataset.max;
+          updateStatus(`Preset set: ${button.textContent}`);
+          savePrefs();
+        });
+      });
+
+      document.getElementById("selectAllColors").addEventListener("click", () => {
+        colorGrid.querySelectorAll("input[type=checkbox]").forEach((input) => {
+          input.checked = true;
+        });
+        updateStatus("All colors selected.");
+        savePrefs();
+      });
+
+      document.getElementById("clearColors").addEventListener("click", () => {
+        colorGrid.querySelectorAll("input[type=checkbox]").forEach((input) => {
+          input.checked = false;
+        });
+        updateStatus("Colors cleared.");
+        savePrefs();
+      });
+
+      document.getElementById("rollBtn").addEventListener("click", roll);
+      document.getElementById("resetBtn").addEventListener("click", resetAll);
+      minInput.addEventListener("change", savePrefs);
+      maxInput.addEventListener("change", savePrefs);
+      useColorInput.addEventListener("change", savePrefs);
+
+      const prefs = loadPrefs();
+      minInput.value = prefs.min;
+      maxInput.value = prefs.max;
+      useColorInput.checked = prefs.useColor;
+      buildColors(prefs.selectedColors);
+    </script>
+  </body>
+</html>
