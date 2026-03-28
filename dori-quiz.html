@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dóri quiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1f2937;
+        --muted: #4b5563;
+        --bg-a: #ecfeff;
+        --bg-b: #fef3c7;
+        --card: #ffffff;
+        --good: #15803d;
+        --bad: #b91c1c;
+        --line: #cbd5e1;
+      }
+
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+
+      body {
+        margin: 0;
+        font-family: "Nunito", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(1200px 700px at -10% -10%, #bae6fd 0%, transparent 60%),
+          radial-gradient(1200px 700px at 110% 110%, #fde68a 0%, transparent 60%),
+          linear-gradient(130deg, var(--bg-a), var(--bg-b));
+        padding: 20px;
+      }
+
+      .page {
+        width: min(1120px, 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 14px;
+      }
+
+      .back {
+        justify-self: start;
+        text-decoration: none;
+        color: var(--ink);
+        font-weight: 800;
+        font-family: "Baloo 2", "Nunito", sans-serif;
+        background: #ffffffcc;
+        border: 3px solid #0891b2;
+        border-radius: 999px;
+        padding: 10px 16px;
+      }
+
+      .shell {
+        background: var(--card);
+        border-radius: 24px;
+        border: 3px solid #bae6fd;
+        box-shadow: 0 22px 40px rgba(30, 41, 59, 0.14);
+        padding: clamp(16px, 3vw, 28px);
+        display: grid;
+        gap: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-family: "Baloo 2", "Nunito", sans-serif;
+        font-size: clamp(30px, 5vw, 48px);
+        line-height: 1.05;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: clamp(16px, 2.1vw, 20px);
+      }
+
+      .layout {
+        display: grid;
+        gap: 18px;
+      }
+
+      @media (min-width: 960px) {
+        .layout {
+          grid-template-columns: 320px 1fr;
+          align-items: start;
+        }
+      }
+
+      .categories {
+        background: #f8fafc;
+        border: 2px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+      }
+
+      .categories h2 {
+        margin: 0;
+        font-size: 20px;
+        font-family: "Baloo 2", "Nunito", sans-serif;
+      }
+
+      .cat-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .cat-actions button {
+        border: 2px solid #94a3b8;
+        border-radius: 999px;
+        background: #ffffff;
+        color: #334155;
+        font-weight: 800;
+        padding: 6px 12px;
+        cursor: pointer;
+      }
+
+      .cat-list {
+        display: grid;
+        gap: 8px;
+        max-height: 360px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .cat-item {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 8px 10px;
+      }
+
+      .cat-item input {
+        transform: scale(1.2);
+      }
+
+      .cat-item span {
+        font-weight: 700;
+      }
+
+      .main {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .question-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .pill {
+        background: #ecfeff;
+        border: 2px solid #67e8f9;
+        border-radius: 999px;
+        padding: 6px 12px;
+        font-weight: 800;
+        font-size: 14px;
+      }
+
+      .question-head button {
+        border: 3px solid #111827;
+        background: #facc15;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 800;
+        font-size: 16px;
+        cursor: pointer;
+      }
+
+      .gallery {
+        min-height: 220px;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        background: #f8fafc;
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .gallery.empty {
+        grid-template-columns: 1fr;
+        place-items: center;
+        color: #64748b;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .image-tile {
+        border: 2px solid #cbd5e1;
+        border-radius: 12px;
+        background: #fff;
+        padding: 8px;
+        display: grid;
+        place-items: center;
+      }
+
+      .image-tile img {
+        width: 100%;
+        height: clamp(170px, 24vw, 300px);
+        object-fit: contain;
+        border-radius: 8px;
+        background: transparent;
+      }
+
+      .options {
+        display: grid;
+        gap: 10px;
+      }
+
+      @media (min-width: 680px) {
+        .options {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .option-btn {
+        border: 3px solid #1e293b;
+        background: #ffffff;
+        color: #0f172a;
+        border-radius: 14px;
+        padding: 12px;
+        text-align: left;
+        font-weight: 800;
+        font-size: clamp(16px, 2.2vw, 20px);
+        cursor: pointer;
+      }
+
+      .option-btn.correct {
+        background: #dcfce7;
+        border-color: var(--good);
+        color: #14532d;
+      }
+
+      .option-btn.incorrect {
+        background: #fee2e2;
+        border-color: var(--bad);
+        color: #7f1d1d;
+      }
+
+      .option-btn:disabled {
+        opacity: 1;
+        cursor: default;
+      }
+
+      .feedback {
+        min-height: 28px;
+        margin: 0;
+        font-weight: 800;
+      }
+
+      .feedback.good { color: var(--good); }
+      .feedback.bad { color: var(--bad); }
+      .feedback.info { color: #1d4ed8; }
+
+      .note {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <a class="back" href="index.html" aria-label="Vissza a főoldalra">⬅ Vissza</a>
+
+      <section class="shell">
+        <header>
+          <h1>Dóri quiz</h1>
+          <p class="subtitle">Válassz kategóriát, és találd ki, melyik növény vagy állat látható a képen.</p>
+        </header>
+
+        <div class="layout">
+          <aside class="categories" aria-label="Kategória választó">
+            <h2>Kategóriák</h2>
+            <div class="cat-actions">
+              <button id="selectAllBtn" type="button">Mind</button>
+              <button id="selectNoneBtn" type="button">Egyik sem</button>
+            </div>
+            <div id="categoryList" class="cat-list"></div>
+          </aside>
+
+          <section class="main" aria-live="polite">
+            <div class="question-head">
+              <div class="pill" id="currentCategory">Nincs kérdés</div>
+              <button id="nextQuestionBtn" type="button">Új kérdés</button>
+            </div>
+
+            <div id="imageGallery" class="gallery empty">Válassz legalább egy kategóriát, majd kattints az „Új kérdés” gombra.</div>
+
+            <div id="options" class="options"></div>
+            <p id="feedback" class="feedback info"></p>
+            <p class="note">Ha egy névhez több kép tartozik (pl. kakukk 1, kakukk 2), mindet egyszerre látod.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="dori_quiz/manifest.js"></script>
+    <script>
+      const files = Array.isArray(window.DORI_QUIZ_FILES) ? window.DORI_QUIZ_FILES.slice() : [];
+
+      const elements = {
+        categoryList: document.getElementById('categoryList'),
+        selectAllBtn: document.getElementById('selectAllBtn'),
+        selectNoneBtn: document.getElementById('selectNoneBtn'),
+        nextQuestionBtn: document.getElementById('nextQuestionBtn'),
+        currentCategory: document.getElementById('currentCategory'),
+        imageGallery: document.getElementById('imageGallery'),
+        options: document.getElementById('options'),
+        feedback: document.getElementById('feedback'),
+      };
+
+      const state = {
+        categories: [],
+        catalog: {},
+        allEntries: [],
+        currentQuestion: null,
+        answered: false,
+      };
+
+      function stripIndexSuffix(nameWithMaybeIndex) {
+        return nameWithMaybeIndex.replace(/\s+\d+(?:\s+\(\d+\))?$/, '').trim();
+      }
+
+      function encodePath(path) {
+        return path
+          .split('/')
+          .map((part) => encodeURIComponent(part))
+          .join('/');
+      }
+
+      function shuffle(input) {
+        const arr = input.slice();
+        for (let i = arr.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function buildCatalog() {
+        const catalog = {};
+        for (const rel of files) {
+          const slash = rel.indexOf('/');
+          if (slash <= 0 || slash === rel.length - 1) continue;
+          const category = rel.slice(0, slash);
+          const fileName = rel.slice(slash + 1);
+          const stem = fileName.replace(/\.[^.]+$/, '');
+          const itemName = stripIndexSuffix(stem);
+          if (!itemName) continue;
+
+          if (!catalog[category]) catalog[category] = {};
+          if (!catalog[category][itemName]) catalog[category][itemName] = [];
+          catalog[category][itemName].push(`dori_quiz/${rel}`);
+        }
+        return catalog;
+      }
+
+      function buildEntries(catalog) {
+        const entries = [];
+        for (const category of Object.keys(catalog)) {
+          for (const name of Object.keys(catalog[category])) {
+            entries.push({
+              category,
+              name,
+              images: catalog[category][name].slice(),
+            });
+          }
+        }
+        return entries;
+      }
+
+      function renderCategoryList() {
+        elements.categoryList.innerHTML = '';
+        for (const category of state.categories) {
+          const row = document.createElement('label');
+          row.className = 'cat-item';
+
+          const input = document.createElement('input');
+          input.type = 'checkbox';
+          input.value = category;
+          input.checked = true;
+
+          const text = document.createElement('span');
+          text.textContent = category;
+
+          row.appendChild(input);
+          row.appendChild(text);
+          elements.categoryList.appendChild(row);
+        }
+      }
+
+      function getSelectedCategories() {
+        const selected = [];
+        const inputs = elements.categoryList.querySelectorAll('input[type="checkbox"]');
+        inputs.forEach((input) => {
+          if (input.checked) selected.push(input.value);
+        });
+        return selected;
+      }
+
+      function getPoolEntries(selectedCategories) {
+        const selectedSet = new Set(selectedCategories);
+        return state.allEntries.filter((entry) => selectedSet.has(entry.category));
+      }
+
+      function takeUniqueRandomNames(entries, usedNames, needed) {
+        const unique = [];
+        const seen = new Set();
+        for (const entry of entries) {
+          if (usedNames.has(entry.name)) continue;
+          if (seen.has(entry.name)) continue;
+          seen.add(entry.name);
+          unique.push(entry.name);
+        }
+        const picked = [];
+        const shuffled = shuffle(unique);
+        for (const name of shuffled) {
+          if (picked.length >= needed) break;
+          picked.push(name);
+          usedNames.add(name);
+        }
+        return picked;
+      }
+
+      function buildOptions(question, selectedPool) {
+        const desiredCount = randomInt(2, 4);
+        const neededDistractors = Math.max(1, desiredCount - 1);
+        const usedNames = new Set([question.name]);
+        const distractors = [];
+
+        const sameCategory = selectedPool.filter(
+          (entry) => entry.category === question.category && entry.name !== question.name
+        );
+        distractors.push(...takeUniqueRandomNames(sameCategory, usedNames, neededDistractors));
+
+        if (distractors.length < neededDistractors) {
+          const otherSelected = selectedPool.filter(
+            (entry) => entry.category !== question.category && entry.name !== question.name
+          );
+          distractors.push(
+            ...takeUniqueRandomNames(otherSelected, usedNames, neededDistractors - distractors.length)
+          );
+        }
+
+        if (distractors.length < neededDistractors) {
+          const global = state.allEntries.filter((entry) => entry.name !== question.name);
+          distractors.push(...takeUniqueRandomNames(global, usedNames, neededDistractors - distractors.length));
+        }
+
+        const options = [question.name, ...distractors];
+        if (options.length < 2) return options;
+        return shuffle(options.slice(0, Math.min(4, options.length)));
+      }
+
+      function clearQuestionUi() {
+        elements.options.innerHTML = '';
+        elements.feedback.textContent = '';
+        elements.feedback.className = 'feedback info';
+      }
+
+      function renderImages(question) {
+        elements.imageGallery.innerHTML = '';
+        elements.imageGallery.classList.remove('empty');
+
+        for (const relPath of question.images) {
+          const tile = document.createElement('div');
+          tile.className = 'image-tile';
+
+          const img = document.createElement('img');
+          img.src = encodePath(relPath);
+          img.alt = question.name;
+          img.loading = 'lazy';
+
+          tile.appendChild(img);
+          elements.imageGallery.appendChild(tile);
+        }
+      }
+
+      function renderOptions(question, options) {
+        elements.options.innerHTML = '';
+        for (const option of options) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'option-btn';
+          btn.textContent = option;
+          btn.dataset.option = option;
+          btn.addEventListener('click', () => onOptionClick(btn, question.name));
+          elements.options.appendChild(btn);
+        }
+      }
+
+      function onOptionClick(clickedButton, correctName) {
+        if (state.answered) return;
+        state.answered = true;
+
+        const buttons = Array.from(elements.options.querySelectorAll('.option-btn'));
+        const chosen = clickedButton.dataset.option;
+
+        buttons.forEach((btn) => {
+          btn.disabled = true;
+          if (btn.dataset.option === correctName) btn.classList.add('correct');
+        });
+
+        if (chosen === correctName) {
+          elements.feedback.textContent = 'Helyes válasz!';
+          elements.feedback.className = 'feedback good';
+        } else {
+          clickedButton.classList.add('incorrect');
+          elements.feedback.textContent = `Helyes válasz: ${correctName}`;
+          elements.feedback.className = 'feedback bad';
+        }
+      }
+
+      function showEmptyState(message) {
+        clearQuestionUi();
+        elements.currentCategory.textContent = 'Nincs kérdés';
+        elements.imageGallery.className = 'gallery empty';
+        elements.imageGallery.textContent = message;
+        state.currentQuestion = null;
+      }
+
+      function nextQuestion() {
+        const selectedCategories = getSelectedCategories();
+        if (!selectedCategories.length) {
+          showEmptyState('Válassz legalább egy kategóriát.');
+          return;
+        }
+
+        const pool = getPoolEntries(selectedCategories);
+        if (!pool.length) {
+          showEmptyState('A kiválasztott kategóriában nincs elérhető kép.');
+          return;
+        }
+
+        clearQuestionUi();
+        state.answered = false;
+
+        let candidates = pool;
+        if (state.currentQuestion) {
+          const filtered = pool.filter(
+            (entry) =>
+              !(entry.category === state.currentQuestion.category && entry.name === state.currentQuestion.name)
+          );
+          if (filtered.length) candidates = filtered;
+        }
+
+        const question = candidates[Math.floor(Math.random() * candidates.length)];
+        state.currentQuestion = question;
+        elements.currentCategory.textContent = `Kategória: ${question.category}`;
+
+        renderImages(question);
+
+        const options = buildOptions(question, pool);
+        if (options.length < 2) {
+          showEmptyState('Ehhez a kiválasztáshoz nincs elég válaszopció (minimum 2 kell).');
+          return;
+        }
+        renderOptions(question, options);
+      }
+
+      function setAllCategories(checked) {
+        const inputs = elements.categoryList.querySelectorAll('input[type="checkbox"]');
+        inputs.forEach((input) => {
+          input.checked = checked;
+        });
+      }
+
+      function init() {
+        state.catalog = buildCatalog();
+        state.categories = Object.keys(state.catalog).sort((a, b) =>
+          a.localeCompare(b, 'hu', { sensitivity: 'base' })
+        );
+        state.allEntries = buildEntries(state.catalog);
+
+        renderCategoryList();
+        elements.selectAllBtn.addEventListener('click', () => setAllCategories(true));
+        elements.selectNoneBtn.addEventListener('click', () => setAllCategories(false));
+        elements.nextQuestionBtn.addEventListener('click', nextQuestion);
+
+        if (!state.allEntries.length) {
+          showEmptyState('Nincs beolvasható kép a dori_quiz mappában.');
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>
