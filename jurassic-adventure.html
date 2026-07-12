@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jurassic kaland</title>
+    <style>
+      :root {
+        --bg: #07110c;
+        --panel: rgba(10, 18, 13, 0.88);
+        --panel-solid: #101912;
+        --ink: #fff8dc;
+        --muted: #f8d889;
+        --amber: #ffbf2f;
+        --red: #d12f1f;
+        --green: #2f7d3b;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      * { box-sizing: border-box; }
+
+      html, body { min-height: 100%; }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 20% 10%, rgba(255, 191, 47, 0.22), transparent 32rem),
+          radial-gradient(circle at 85% 20%, rgba(209, 47, 31, 0.2), transparent 24rem),
+          linear-gradient(145deg, #07110c 0%, #142118 42%, #0b120d 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(115deg, transparent 0 44%, rgba(255, 191, 47, 0.09) 44% 46%, transparent 46% 100%),
+          repeating-linear-gradient(135deg, rgba(255, 191, 47, 0.06) 0 14px, rgba(209, 47, 31, 0.05) 14px 28px);
+        mix-blend-mode: screen;
+        opacity: 0.55;
+      }
+
+      .app {
+        width: min(1180px, 100%);
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: clamp(14px, 2.5vw, 28px);
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .brand {
+        display: grid;
+        gap: 2px;
+      }
+
+      .brand p {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(12px, 2.2vw, 15px);
+        letter-spacing: 0;
+      }
+
+      h1 {
+        margin: 0;
+        color: #ffe28a;
+        font-size: clamp(30px, 7vw, 64px);
+        line-height: 0.92;
+        letter-spacing: 0;
+        text-shadow: 0 4px 0 #7a1f16, 0 12px 30px rgba(0, 0, 0, 0.65);
+      }
+
+      .nav-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .tool-button,
+      .choice-button {
+        border: 0;
+        border-radius: 12px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 900;
+        color: #1d1207;
+        background: linear-gradient(180deg, #ffe28a, var(--amber));
+        box-shadow: 0 5px 0 #8a4a09, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .tool-button {
+        min-height: 48px;
+        padding: 10px 14px;
+        font-size: 15px;
+      }
+
+      .tool-button.secondary {
+        color: var(--ink);
+        background: rgba(255, 248, 220, 0.12);
+        border: 2px solid rgba(255, 226, 138, 0.58);
+        box-shadow: none;
+      }
+
+      .tool-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .scene {
+        overflow: hidden;
+        border-radius: 20px;
+        border: 3px solid rgba(255, 226, 138, 0.58);
+        background: #050907;
+        box-shadow: var(--shadow);
+      }
+
+      .image-wrap {
+        position: relative;
+        min-height: clamp(240px, 50vw, 560px);
+        background: #050907;
+      }
+
+      .image-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(7, 17, 12, 0) 35%, rgba(7, 17, 12, 0.95) 100%),
+          radial-gradient(circle at 10% 20%, rgba(255, 191, 47, 0.2), transparent 18rem);
+      }
+
+      .scene img {
+        width: 100%;
+        height: clamp(240px, 50vw, 560px);
+        display: block;
+        object-fit: cover;
+      }
+
+      .status {
+        position: absolute;
+        left: clamp(12px, 2.5vw, 24px);
+        right: clamp(12px, 2.5vw, 24px);
+        bottom: clamp(12px, 2.5vw, 24px);
+        z-index: 1;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        border-radius: 999px;
+        padding: 6px 12px;
+        color: #fff8dc;
+        background: rgba(7, 17, 12, 0.74);
+        border: 2px solid rgba(255, 226, 138, 0.45);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .story-panel {
+        display: grid;
+        gap: 14px;
+        padding: clamp(16px, 3vw, 28px);
+        background:
+          linear-gradient(90deg, rgba(209, 47, 31, 0.18), transparent 30%),
+          var(--panel);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(26px, 4.8vw, 46px);
+        line-height: 1;
+        color: #ffe28a;
+        letter-spacing: 0;
+      }
+
+      .story-text {
+        display: grid;
+        gap: 10px;
+        max-width: 78ch;
+      }
+
+      .story-text p {
+        margin: 0;
+        font-size: clamp(18px, 2.4vw, 23px);
+        line-height: 1.45;
+      }
+
+      .choices {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+      }
+
+      @media (min-width: 780px) {
+        .choices.multi {
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+      }
+
+      .choice-button {
+        width: 100%;
+        min-height: 76px;
+        padding: 16px 18px;
+        text-align: left;
+        font-size: clamp(19px, 2.6vw, 25px);
+        line-height: 1.12;
+        transition: transform 100ms ease, filter 120ms ease, box-shadow 100ms ease;
+      }
+
+      .choice-button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.04);
+        box-shadow: 0 8px 0 #8a4a09, 0 18px 30px rgba(0, 0, 0, 0.32);
+      }
+
+      .choice-button:active {
+        transform: translateY(0);
+        box-shadow: 0 5px 0 #8a4a09, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .choice-button.danger {
+        color: #fff8dc;
+        background: linear-gradient(180deg, #e94d36, #9f2118);
+        box-shadow: 0 5px 0 #4d100c, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .choice-button.safe {
+        color: #07110c;
+        background: linear-gradient(180deg, #a7f3a0, #49b457);
+        box-shadow: 0 5px 0 #23642f, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .choice-button:focus-visible,
+      .tool-button:focus-visible {
+        outline: 4px solid #fff8dc;
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 560px) {
+        .app { padding: 10px; }
+        .topbar { align-items: stretch; }
+        .nav-actions { width: 100%; justify-content: stretch; }
+        .tool-button { flex: 1 1 130px; }
+        .scene { border-radius: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <p>Dinoszaurusz-sziget</p>
+          <h1>Jurassic kaland</h1>
+        </div>
+        <nav class="nav-actions" aria-label="Játék menü">
+          <a class="tool-button secondary" href="index.html">Főmenü</a>
+          <button class="tool-button secondary" type="button" id="backButton">Vissza</button>
+          <button class="tool-button" type="button" id="restartButton">Újrakezdés</button>
+        </nav>
+      </header>
+
+      <section class="scene" aria-live="polite">
+        <div class="image-wrap">
+          <img id="sceneImage" src="" alt="" />
+          <div class="status">
+            <span class="badge" id="statusBadge">Kaland folyamatban</span>
+            <span class="badge" id="stepBadge">1. jelenet</span>
+          </div>
+        </div>
+        <article class="story-panel">
+          <h2 id="sceneTitle"></h2>
+          <div class="story-text" id="storyText"></div>
+          <div class="choices" id="choices"></div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const IMAGE_DIR = "jurrassic/images/";
+
+      const GAME_NODES = {
+        gate: {
+          titleHu: "A kapu kinyílik",
+          image: "gate-opening.png",
+          badge: "Belépés a parkba",
+          bodyHu: [
+            "Az első próbacsoporttal érkezel egy új tematikus parkba. Azt hallottad, hogy dinoszauruszok lesznek benne, de biztos vagy benne, hogy csak nagyon élethű gépek.",
+            "A főkapu óriási. A kerítésen piros fények villognak, a drótok pedig túl komolynak tűnnek egy sima játékparkhoz. A kapu lassan kinyílik, és a dzsip befordul a látogatóközpont felé."
+          ],
+          choices: [
+            { labelHu: "Irány a látogatóközpont", target: "visitor" }
+          ]
+        },
+        visitor: {
+          titleHu: "Látogatóközpont",
+          image: "visitor-center.png",
+          badge: "Első felfedezés",
+          bodyHu: [
+            "A központban egy hatalmas T-Rex csontváz áll, mögötte egy hosszú nyakú óriás csontjai magasodnak. Egy kisfilm elmagyarázza, hogyan hozták vissza a kihalt állatokat borostyánba zárt szúnyogok DNS-éből.",
+            "A székek továbbgördülnek egy labor ablaka előtt. Tojások repednek, apró dinoszauruszok bújnak ki. Ez nem díszlet. A parkban tényleg élő dinoszauruszok vannak."
+          ],
+          choices: [
+            { labelHu: "Enni a Kréta kávézóban", target: "cafe" },
+            { labelHu: "Megnézni a fosszília központot", target: "fossils" },
+            { labelHu: "Bemenni a Gallimimus ajándékboltba", target: "gift" }
+          ]
+        },
+        cafe: {
+          titleHu: "Kréta kávézó",
+          image: "cretaceous-cafe.png",
+          badge: "Készülődés",
+          bodyHu: [
+            "Nagyon éhes vagy, ezért megpakolod a tálcádat zselével, dinoszaurusz alakú falatokkal és sajtos tésztával. A hosszú utazás után jól esik feltöltődni.",
+            "A kávézó ablakain túl pálmák és kerítések látszanak. A kaland csak most kezdődik."
+          ],
+          choices: [
+            { labelHu: "Fosszíliákhoz megyek", target: "fossils" },
+            { labelHu: "Ajándékboltba megyek", target: "gift" },
+            { labelHu: "Eleget láttam, irány a park", target: "parkTour" }
+          ]
+        },
+        fossils: {
+          titleHu: "Fosszília központ",
+          image: "fossil-center.png",
+          badge: "Dínóismeret",
+          bodyHu: [
+            "A kiállításból megtudod, milyen fajok élnek a parkban: Parasaurolophus, Velociraptor, Proceratosaurus, Triceratops, Brachiosaurus, Gallimimus és még több ragadozó.",
+            "Megjegyzed, melyik növényevő és melyik húsevő. Ez később nagyon fontos lehet."
+          ],
+          choices: [
+            { labelHu: "Ajándékboltba megyek", target: "gift" },
+            { labelHu: "Kávézóba megyek", target: "cafe" },
+            { labelHu: "Eleget láttam, irány a park", target: "parkTour" }
+          ]
+        },
+        gift: {
+          titleHu: "Gallimimus ajándékbolt",
+          image: "gift-shop.png",
+          badge: "Felszerelés",
+          bodyHu: [
+            "Veszel egy fotókönyvet, egy egyszer használatos fényképezőt, egy dinoszauruszos zseblámpát és egy menő pizsamát. A barátaid ezt sosem hinnék el bizonyíték nélkül.",
+            "A táskádban most már van kamera és zseblámpa. Úgy érzed, készen állsz a parkra."
+          ],
+          choices: [
+            { labelHu: "Kávézóba megyek", target: "cafe" },
+            { labelHu: "Fosszíliákhoz megyek", target: "fossils" },
+            { labelHu: "Eleget láttam, irány a park", target: "parkTour" }
+          ]
+        },
+        parkTour: {
+          titleHu: "A park útján",
+          image: "jeep-track.png",
+          badge: "Dzsiptúra",
+          bodyHu: [
+            "Beszállsz az önvezető dzsipbe. Először kisebb dinoszauruszok mellett haladtok el, aztán a Gallimimus csapat zajong a kerítés mögött.",
+            "A Brachiosaurus kifutónál egy óriás a lagúnából iszik. Felemeled a kamerát, amikor a dzsip hirtelen megáll. A hangszóró azt mondja: maradjatok az autóban, amíg újraindítják a rendszert."
+          ],
+          choices: [
+            { labelHu: "Az autóban maradok", target: "waitCar" },
+            { labelHu: "Kiszállok egy jobb Brachiosaurus fotóért", target: "brachioPhoto", tone: "danger" }
+          ]
+        },
+        waitCar: {
+          titleHu: "Várakozás a dzsipben",
+          image: "car-rain.png",
+          badge: "Jó döntés",
+          bodyHu: [
+            "Az autóban maradsz. Pár perc múlva a dzsip hátramenetbe kapcsol, és gyorsan kivisz a fő útvonalról.",
+            "Kiderül, hogy a húsevő dinoszauruszok területén hiba történt. A személyzet a látogatóközpontba kísér, amíg megérkezik a mentés."
+          ],
+          choices: [
+            { labelHu: "Bent maradok a látogatóközpontban", target: "visitorSafe", tone: "safe" },
+            { labelHu: "Kimegyek a helikopterhez", target: "outsideHelipad", tone: "danger" }
+          ]
+        },
+        visitorSafe: {
+          titleHu: "Biztonságos várakozás",
+          image: "visitor-center.png",
+          badge: "Túlélés",
+          bodyHu: [
+            "A látogatóközpontban maradsz, ahol a személyzet tudja, hol keressen. A rádióból meghallod, hogy egy Velociraptor pont a helikopterleszálló felé jár.",
+            "Jól döntöttél. Nem kóborolsz egyedül a szigeten. A mentőcsapat később a kikötőhöz visz."
+          ],
+          choices: [
+            { labelHu: "Evakuálás hajóval", target: "shipWin", tone: "safe" }
+          ]
+        },
+        shipWin: {
+          titleHu: "Megmenekültél",
+          image: "boat-escape.png",
+          badge: "Győzelem",
+          bodyHu: [
+            "A hajó elindul a szigetről. A park fényei egyre kisebbek lesznek a parton.",
+            "Túlélted a Jurassic kalandot, és biztosan lesz mit mesélned."
+          ],
+          terminal: "win",
+          choices: [
+            { labelHu: "Új játék", action: "restart", tone: "safe" }
+          ]
+        },
+        outsideHelipad: {
+          titleHu: "A helikopterleszálló",
+          image: "helipad-raptor.png",
+          badge: "Veszély",
+          bodyHu: [
+            "Nem akarsz várni. A helikopterleszálló felé indulsz, de a terep nehéz, a bokrok pedig zörögnek.",
+            "Egy Velociraptor ugrik elő a növények közül. Futni próbálsz, de túl gyors. A kaland itt véget ér."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        brachioPhoto: {
+          titleHu: "Egyedül a kifutónál",
+          image: "jeep-track.png",
+          badge: "Rossz pillanat",
+          bodyHu: [
+            "Kiszállsz, hogy közelebbről fotózd a Brachiosaurust. A képek remekül sikerülnek, de ekkor a dzsipek megindulnak nélküled.",
+            "Hiába futsz utánuk, túl gyorsak. Egyedül maradsz a parkban, és nem tudod, merre biztonságosabb."
+          ],
+          choices: [
+            { labelHu: "Visszakövetem a dzsip útját", target: "followJeep" },
+            { labelHu: "Előre megyek mélyebbre a parkba", target: "deeperPark", tone: "danger" }
+          ]
+        },
+        followJeep: {
+          titleHu: "Vissza a sínen",
+          image: "closed-gate.png",
+          badge: "Visszaút",
+          bodyHu: [
+            "A már ismert útvonalon indulsz vissza. A Gallimimus kifutó után eléred a Proceratosaurus mezőt, majd a főkaput.",
+            "A kapu zárva van. Egy őrtoronyban fényt látsz."
+          ],
+          choices: [
+            { labelHu: "Segítségért kiabálok", target: "yellHelp", tone: "safe" },
+            { labelHu: "Megpróbálom megmászni a kaput", target: "climbGateLose", tone: "danger" }
+          ]
+        },
+        yellHelp: {
+          titleHu: "Az őrtorony",
+          image: "closed-gate.png",
+          badge: "Mentő ötlet",
+          bodyHu: [
+            "Teli torokból kiabálsz. Az őr először nem hall, ezért kavicsot dobsz az ablak felé. A második kavics koppan, az őr meglát.",
+            "A kapu kinyílik, te pedig beszaladsz. A személyzet a látogatóközpont felé terel."
+          ],
+          choices: [
+            { labelHu: "Bent maradok a látogatóközpontban", target: "visitorSafe", tone: "safe" },
+            { labelHu: "Kimegyek a helikopterhez", target: "outsideHelipad", tone: "danger" }
+          ]
+        },
+        climbGateLose: {
+          titleHu: "A kapu túl magas",
+          image: "raptor-gate.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Felkapaszkodsz a kapura, de a fém csúszós és túl magas. A túloldalon mozgást hallasz.",
+            "Velociraptorok rohannak elő a sűrűből. Nem érsz át időben."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        deeperPark: {
+          titleHu: "Mélyebben a parkban",
+          image: "carnivore-road.png",
+          badge: "Ragadozók között",
+          bodyHu: [
+            "Előre mész. Elhaladsz a Dilophosaurus kifutó és a Baryonyx kerítése mellett. A ragadozók a kerítés mögött mozognak, de így is túl közel vannak.",
+            "A T-Rex területéhez érsz. Egy hatalmas üvöltés rázza meg a levegőt."
+          ],
+          choices: [
+            { labelHu: "Mozdulatlan maradok", target: "stayStillTrex", tone: "safe" },
+            { labelHu: "Futni kezdek", target: "runTrexLose", tone: "danger" }
+          ]
+        },
+        runTrexLose: {
+          titleHu: "A T-Rex gyorsabb",
+          image: "trex-road.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Futni kezdesz, de a T-Rex azonnal észrevesz. A föld beleremeg minden lépésébe.",
+            "Nincs elég időd elbújni. A kaland itt véget ér."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        stayStillTrex: {
+          titleHu: "Mozdulatlanul",
+          image: "trex-road.png",
+          badge: "Lélegzet-visszafojtva",
+          bodyHu: [
+            "Emlékszel a filmben hallott szabályra: a T-Rex a mozgást figyeli. Megmerevedsz.",
+            "A hatalmas állat kilép az útra, körbeszimatol, majd továbbindul a látogatóközpont felé. Közel volt. Nagyon közel."
+          ],
+          choices: [
+            { labelHu: "Bemászom a kifutóba pihenni", target: "electricLose", tone: "danger" },
+            { labelHu: "Pihenek a pálya szélén", target: "restTrack", tone: "safe" },
+            { labelHu: "Nem állok meg, továbbmegyek", target: "keepWalkingNoRest" }
+          ]
+        },
+        electricLose: {
+          titleHu: "Áram alatt",
+          image: "electric-fence.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Azt hiszed, az áram már le van kapcsolva, ezért elkezdesz átmászni a kerítésen.",
+            "Hirtelen zúgás, szikrák és vakító fény. A rossz döntés miatt minden elsötétül."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        restTrack: {
+          titleHu: "Rövid pihenő",
+          image: "parasaurolophus-field.png",
+          badge: "Erőgyűjtés",
+          bodyHu: [
+            "A pálya mellett pihensz pár percet. A Parasaurolophus csorda kíváncsian figyel a kerítés mögül.",
+            "Összeszeded magad, aztán továbbindulsz. A Metriacanthosaurus kifutója mellett bokrok zörrennek."
+          ],
+          choices: [
+            { labelHu: "Lassan továbbmegyek", target: "slowWalkRest", tone: "safe" },
+            { labelHu: "Előveszem a kamerát", target: "cameraLose", tone: "danger" }
+          ]
+        },
+        cameraLose: {
+          titleHu: "Az utolsó fotó",
+          image: "camera-crush.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "A fényképezőért nyúlsz. Egy dinoszaurusz kidugja a fejét, mintha neked pózolna.",
+            "Mögötted azonban a T-Rex átrohan a fák között. Egy kidöntött fa rád zuhan. A kaland itt véget ér."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        slowWalkRest: {
+          titleHu: "A Triceratops kifutó",
+          image: "triceratops-enclosure.png",
+          badge: "Óvatos lépések",
+          bodyHu: [
+            "Lassan haladsz tovább. A Triceratops kifutója mellett megnyugszol egy kicsit: ezek növényevők.",
+            "Ekkor mögötted újabb zajt hallasz. Lehet, hogy a T-Rex visszafordult."
+          ],
+          choices: [
+            { labelHu: "Elfutok", target: "trashTrexLose", tone: "danger" },
+            { labelHu: "Bemászom a Triceratops kifutóba", target: "enterTrike", tone: "safe" },
+            { labelHu: "Mozdulatlan maradok", target: "stayStillPath", tone: "safe" }
+          ]
+        },
+        trashTrexLose: {
+          titleHu: "Rossz búvóhely",
+          image: "trex-road.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Futni kezdesz, de meglátod a T-Rexet. Beugrasz egy út menti kukába, hátha nem vesz észre.",
+            "A T-Rex felemeli a kukát. Ez nem volt jó búvóhely."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        enterTrike: {
+          titleHu: "A Triceratopsok között",
+          image: "triceratops-enclosure.png",
+          badge: "Bátor út",
+          bodyHu: [
+            "Átmászol a kerítésen, szerencsére nem ráz meg az áram. A Triceratops csorda hatalmas és gyönyörű.",
+            "A túloldalon meglátod a T-Rexet, de mozdulatlan maradsz, és elhalad melletted."
+          ],
+          choices: [
+            { labelHu: "A kifutón belül kerülöm meg az utat", target: "aroundEnclosure", tone: "safe" },
+            { labelHu: "Visszamászom a pályára", target: "backTrackLose", tone: "danger" }
+          ]
+        },
+        aroundEnclosure: {
+          titleHu: "Segítség a kapunál",
+          image: "worker-gate.png",
+          badge: "Mentés közel",
+          bodyHu: [
+            "A kerítés mellett haladsz a kifutón belül. Hosszú út, de a pihenő miatt még van erőd.",
+            "Később meglátsz egy parkőrt a túloldalon. Azt kiáltja, hogy várj ott, ahol vagy."
+          ],
+          choices: [
+            { labelHu: "Megvárom", target: "waitRanger", tone: "safe" },
+            { labelHu: "Elindulok felé", target: "headToRanger" }
+          ]
+        },
+        waitRanger: {
+          titleHu: "A parkőr dzsipje",
+          image: "worker-gate.png",
+          badge: "Győzelem",
+          bodyHu: [
+            "Hallgatsz a parkőrre. Egy óráig vársz, miközben kinti sikolyokat és motorzajt hallasz.",
+            "Végül egy dzsip hajt be érted. A raptorok üldözőbe veszik, de a biztonsági kapu az utolsó pillanatban lezár mögöttetek."
+          ],
+          choices: [
+            { labelHu: "A mentőhelikopterhez", target: "helicopterWin", tone: "safe" }
+          ]
+        },
+        headToRanger: {
+          titleHu: "Át a kapun",
+          image: "raptor-gate.png",
+          badge: "Szűk menekülés",
+          bodyHu: [
+            "Nem akarsz tovább várni. Kimászol a kifutóból, és a pályán haladsz tovább.",
+            "A Velociraptor kerítésénél zajt hallasz. Futni kezdesz, átmászol a kapun, és csak egy hajszállal kerülsz ki a raptorok elől."
+          ],
+          choices: [
+            { labelHu: "Vissza a látogatóközpontba", target: "visitorEvacWin", tone: "safe" }
+          ]
+        },
+        visitorEvacWin: {
+          titleHu: "Helikopteres menekülés",
+          image: "helicopter-escape.png",
+          badge: "Győzelem",
+          bodyHu: [
+            "A látogatóközpontnál túlélőket találsz. A személyzet a helikopterhez kísér.",
+            "A rotor felpörög, a sziget pedig lassan eltűnik alattatok. Megmenekültél."
+          ],
+          terminal: "win",
+          choices: [
+            { labelHu: "Új játék", action: "restart", tone: "safe" }
+          ]
+        },
+        backTrackLose: {
+          titleHu: "Vissza a pályára",
+          image: "helipad-raptor.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Visszamászol a pályára, de túl sokáig nézed a növényeket és a kerítéseket.",
+            "Későn veszed észre a kis ragadozót. A Velociraptor gyorsabb nálad."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        stayStillPath: {
+          titleHu: "Megint mozdulatlanul",
+          image: "trex-road.png",
+          badge: "Türelem",
+          bodyHu: [
+            "Megállsz, és jól teszed. A T-Rex újra átvág az úton, majd visszafordul arra, amerről jött.",
+            "Amikor már nem hallod a lépteit, továbbindulsz."
+          ],
+          choices: [
+            { labelHu: "Tovább az ösvényen", target: "restroomPath", tone: "safe" }
+          ]
+        },
+        restroomPath: {
+          titleHu: "Pihenő az úton",
+          image: "restroom-soda.png",
+          badge: "Evakuálás",
+          bodyHu: [
+            "Hosszú séta után egy pihenőhöz érsz. Mosol kezet, iszol egy hideg üdítőt, majd hangosbemondó szólal meg: a szigetet kiürítik, mindenki menjen a látogatóközpontba.",
+            "Végre egyértelmű célod van."
+          ],
+          choices: [
+            { labelHu: "A látogatóközpont felé", target: "visitorEvacRest", tone: "safe" }
+          ]
+        },
+        visitorEvacRest: {
+          titleHu: "Utolsó kapu",
+          image: "raptor-gate.png",
+          badge: "Erőből sikerül",
+          bodyHu: [
+            "A Velociraptor kifutója mellett rohansz el. A raptorok a kapu felé száguldanak, de van elég erőd a mászáshoz.",
+            "Átjutsz, mielőtt elérnének. A mentőcsapat a helikopterhez visz."
+          ],
+          choices: [
+            { labelHu: "Felszállok", target: "helicopterWin", tone: "safe" }
+          ]
+        },
+        keepWalkingNoRest: {
+          titleHu: "Pihenő nélkül",
+          image: "parasaurolophus-field.png",
+          badge: "Fáradás",
+          bodyHu: [
+            "Nem akarsz megállni. A Parasaurolophus mező mellett haladsz tovább, de a lábad egyre nehezebb, és szomjas vagy.",
+            "A Metriacanthosaurus kifutójánál bokrok zörrennek. Most már minden döntés számít."
+          ],
+          choices: [
+            { labelHu: "Futok", target: "runNoRest" },
+            { labelHu: "Lassan továbbmegyek", target: "slowNoRest" },
+            { labelHu: "Előveszem a kamerát", target: "cameraLose", tone: "danger" }
+          ]
+        },
+        runNoRest: {
+          titleHu: "Fáradt futás",
+          image: "triceratops-enclosure.png",
+          badge: "Nincs tartalék",
+          bodyHu: [
+            "Futni kezdesz, de pihenő nélkül hamar kifulladsz. A Triceratops kifutójához érve újabb zajt hallasz hátulról.",
+            "Tudod, hogy nincs sok erőd, mégis azonnal döntened kell."
+          ],
+          choices: [
+            { labelHu: "Elfutok", target: "trashTrexNoRestLose", tone: "danger" },
+            { labelHu: "Bemászom a kifutóba", target: "poopLose", tone: "danger" },
+            { labelHu: "Mozdulatlan maradok", target: "stayStillNoRest", tone: "safe" }
+          ]
+        },
+        slowNoRest: {
+          titleHu: "Óvatosan, de fáradtan",
+          image: "triceratops-enclosure.png",
+          badge: "Nincs pihenő",
+          bodyHu: [
+            "Lassan haladsz, de nagyon kimerült vagy. A Triceratopsok megnyugtatóan néznek ki, ám mögötted valami mozog.",
+            "Ha rosszul döntesz, már nem biztos, hogy lesz erőd menekülni."
+          ],
+          choices: [
+            { labelHu: "Elfutok", target: "trashTrexNoRestLose", tone: "danger" },
+            { labelHu: "Bemászom a kifutóba", target: "poopLose", tone: "danger" },
+            { labelHu: "Mozdulatlan maradok", target: "stayStillNoRest", tone: "safe" }
+          ]
+        },
+        trashTrexNoRestLose: {
+          titleHu: "Kimerülten futni",
+          image: "trex-road.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Futni próbálsz, de pihenő nélkül túl lassú vagy. A T-Rex hamar utolér.",
+            "Egy kukába bújsz, de nem elég jól. Talán a pihenő megmentett volna."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        poopLose: {
+          titleHu: "A legrosszabb lépés",
+          image: "dinosaur-poop.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "Bemászol a Triceratops kifutóba, de kimerülten nem figyelsz a talajra.",
+            "Egy hatalmas trágyás-homokos gödörbe lépsz, amely úgy viselkedik, mint a futóhomok. A kaland itt véget ér."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        stayStillNoRest: {
+          titleHu: "Utolsó nyugodt pillanat",
+          image: "trex-road.png",
+          badge: "Tovább élve",
+          bodyHu: [
+            "Mozdulatlan maradsz. A T-Rex elrohan melletted, aztán visszafordul. Még fáradtan is ez volt az egyetlen jó döntés.",
+            "Továbbbotorkálsz a pályán."
+          ],
+          choices: [
+            { labelHu: "Tovább az ösvényen", target: "restroomNoRest" }
+          ]
+        },
+        restroomNoRest: {
+          titleHu: "Pihenő, túl későn",
+          image: "restroom-soda.png",
+          badge: "Evakuálás",
+          bodyHu: [
+            "Elérsz egy pihenőt, iszol, és meghallod a hangosbemondót: a szigetet kiürítik.",
+            "A látogatóközpont felé kell menned, de a lábad remeg a fáradtságtól."
+          ],
+          choices: [
+            { labelHu: "A látogatóközpont felé", target: "noRestRaptorLose", tone: "danger" }
+          ]
+        },
+        noRestRaptorLose: {
+          titleHu: "Nincs elég erő",
+          image: "raptor-gate.png",
+          badge: "Vesztes vég",
+          bodyHu: [
+            "A Velociraptor kifutójánál raptorok rohannak feléd. Mászni kezdesz, de pihenő nélkül nincs elég erőd.",
+            "Nem jutsz át időben. A kaland itt véget ér."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        helicopterWin: {
+          titleHu: "A sziget alattatok marad",
+          image: "helicopter-escape.png",
+          badge: "Győzelem",
+          bodyHu: [
+            "A helikopter felemelkedik. A dzsungel, a kerítések és a villogó fények lassan apró pontokká válnak.",
+            "Túlélted a parkot. Egy biztos: legközelebb az autóban maradsz."
+          ],
+          terminal: "win",
+          choices: [
+            { labelHu: "Új játék", action: "restart", tone: "safe" }
+          ]
+        }
+      };
+
+      const state = {
+        current: "gate",
+        trail: [],
+        steps: 1
+      };
+
+      const imageEl = document.getElementById("sceneImage");
+      const titleEl = document.getElementById("sceneTitle");
+      const textEl = document.getElementById("storyText");
+      const choicesEl = document.getElementById("choices");
+      const backButton = document.getElementById("backButton");
+      const restartButton = document.getElementById("restartButton");
+      const statusBadge = document.getElementById("statusBadge");
+      const stepBadge = document.getElementById("stepBadge");
+
+      function renderNode(id) {
+        const node = GAME_NODES[id];
+        if (!node) {
+          throw new Error(`Hiányzó jelenet: ${id}`);
+        }
+
+        state.current = id;
+        imageEl.src = IMAGE_DIR + node.image;
+        imageEl.alt = node.titleHu;
+        titleEl.textContent = node.titleHu;
+        statusBadge.textContent = node.terminal === "win"
+          ? "Sikeres menekülés"
+          : node.terminal === "lose"
+            ? "Vesztes vég"
+            : node.badge || "Kaland folyamatban";
+        stepBadge.textContent = `${state.steps}. jelenet`;
+
+        textEl.replaceChildren(
+          ...node.bodyHu.map((paragraph) => {
+            const p = document.createElement("p");
+            p.textContent = paragraph;
+            return p;
+          })
+        );
+
+        choicesEl.className = `choices ${node.choices.length > 1 ? "multi" : ""}`;
+        choicesEl.replaceChildren(
+          ...node.choices.map((choice) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `choice-button ${choice.tone || ""}`.trim();
+            button.textContent = choice.labelHu;
+            button.addEventListener("click", () => {
+              if (choice.action === "restart") {
+                restart();
+                return;
+              }
+              state.trail.push(state.current);
+              state.steps += 1;
+              renderNode(choice.target);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+            return button;
+          })
+        );
+
+        backButton.disabled = state.trail.length === 0;
+      }
+
+      function restart() {
+        state.current = "gate";
+        state.trail = [];
+        state.steps = 1;
+        renderNode("gate");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      backButton.addEventListener("click", () => {
+        const previous = state.trail.pop();
+        if (!previous) return;
+        state.steps = Math.max(1, state.steps - 1);
+        renderNode(previous);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      restartButton.addEventListener("click", restart);
+      renderNode("gate");
+    </script>
+  </body>
+</html>
