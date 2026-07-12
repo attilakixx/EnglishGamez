@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="hu">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pacsi kalandja</title>
+    <style>
+      :root {
+        --bg: #07110c;
+        --panel: rgba(10, 18, 13, 0.88);
+        --ink: #fff8dc;
+        --muted: #f8d889;
+        --amber: #ffbf2f;
+        --red: #d12f1f;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; }
+
+      body {
+        margin: 0;
+        font-family: "Trebuchet MS", "Arial Rounded MT Bold", system-ui, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 20% 10%, rgba(255, 191, 47, 0.22), transparent 32rem),
+          radial-gradient(circle at 85% 20%, rgba(209, 47, 31, 0.2), transparent 24rem),
+          linear-gradient(145deg, #07110c 0%, #142118 42%, #0b120d 100%);
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(115deg, transparent 0 44%, rgba(255, 191, 47, 0.09) 44% 46%, transparent 46% 100%),
+          repeating-linear-gradient(135deg, rgba(255, 191, 47, 0.06) 0 14px, rgba(209, 47, 31, 0.05) 14px 28px);
+        mix-blend-mode: screen;
+        opacity: 0.55;
+      }
+
+      .app {
+        width: min(1180px, 100%);
+        min-height: 100vh;
+        margin: 0 auto;
+        padding: clamp(14px, 2.5vw, 28px);
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .brand { display: grid; gap: 2px; }
+
+      .brand p {
+        margin: 0;
+        color: var(--muted);
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(12px, 2.2vw, 15px);
+        letter-spacing: 0;
+      }
+
+      h1 {
+        margin: 0;
+        color: #ffe28a;
+        font-size: clamp(30px, 7vw, 64px);
+        line-height: 0.92;
+        letter-spacing: 0;
+        text-shadow: 0 4px 0 #7a1f16, 0 12px 30px rgba(0, 0, 0, 0.65);
+      }
+
+      .nav-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+      }
+
+      .tool-button,
+      .choice-button {
+        border: 0;
+        border-radius: 12px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 900;
+        color: #1d1207;
+        background: linear-gradient(180deg, #ffe28a, var(--amber));
+        box-shadow: 0 5px 0 #8a4a09, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .tool-button {
+        min-height: 48px;
+        padding: 10px 14px;
+        font-size: 15px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .tool-button.secondary {
+        color: var(--ink);
+        background: rgba(255, 248, 220, 0.12);
+        border: 2px solid rgba(255, 226, 138, 0.58);
+        box-shadow: none;
+      }
+
+      .tool-button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .scene {
+        overflow: hidden;
+        border-radius: 20px;
+        border: 3px solid rgba(255, 226, 138, 0.58);
+        background: #050907;
+        box-shadow: var(--shadow);
+      }
+
+      .image-wrap {
+        position: relative;
+        min-height: clamp(240px, 50vw, 560px);
+        background: #050907;
+      }
+
+      .image-wrap::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(7, 17, 12, 0) 35%, rgba(7, 17, 12, 0.95) 100%),
+          radial-gradient(circle at 10% 20%, rgba(255, 191, 47, 0.2), transparent 18rem);
+      }
+
+      .scene img {
+        width: 100%;
+        height: clamp(240px, 50vw, 560px);
+        display: block;
+        object-fit: cover;
+      }
+
+      .status {
+        position: absolute;
+        left: clamp(12px, 2.5vw, 24px);
+        right: clamp(12px, 2.5vw, 24px);
+        bottom: clamp(12px, 2.5vw, 24px);
+        z-index: 1;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        min-height: 34px;
+        border-radius: 999px;
+        padding: 6px 12px;
+        color: #fff8dc;
+        background: rgba(7, 17, 12, 0.74);
+        border: 2px solid rgba(255, 226, 138, 0.45);
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .story-panel {
+        display: grid;
+        gap: 14px;
+        padding: clamp(16px, 3vw, 28px);
+        background:
+          linear-gradient(90deg, rgba(209, 47, 31, 0.18), transparent 30%),
+          var(--panel);
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(26px, 4.8vw, 46px);
+        line-height: 1;
+        color: #ffe28a;
+        letter-spacing: 0;
+      }
+
+      .story-text {
+        display: grid;
+        gap: 10px;
+        max-width: 78ch;
+      }
+
+      .story-text p {
+        margin: 0;
+        font-size: clamp(18px, 2.4vw, 23px);
+        line-height: 1.45;
+      }
+
+      .choices {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+      }
+
+      @media (min-width: 780px) {
+        .choices.multi {
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        }
+      }
+
+      .choice-button {
+        width: 100%;
+        min-height: 76px;
+        padding: 16px 18px;
+        text-align: left;
+        font-size: clamp(19px, 2.6vw, 25px);
+        line-height: 1.12;
+        transition: transform 100ms ease, filter 120ms ease, box-shadow 100ms ease;
+      }
+
+      .choice-button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.04);
+        box-shadow: 0 8px 0 #8a4a09, 0 18px 30px rgba(0, 0, 0, 0.32);
+      }
+
+      .choice-button:active {
+        transform: translateY(0);
+        box-shadow: 0 5px 0 #8a4a09, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .choice-button.danger {
+        color: #fff8dc;
+        background: linear-gradient(180deg, #e94d36, #9f2118);
+        box-shadow: 0 5px 0 #4d100c, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .choice-button.safe {
+        color: #07110c;
+        background: linear-gradient(180deg, #a7f3a0, #49b457);
+        box-shadow: 0 5px 0 #23642f, 0 14px 26px rgba(0, 0, 0, 0.28);
+      }
+
+      .choice-button:focus-visible,
+      .tool-button:focus-visible {
+        outline: 4px solid #fff8dc;
+        outline-offset: 3px;
+      }
+
+      @media (max-width: 560px) {
+        .app { padding: 10px; }
+        .topbar { align-items: stretch; }
+        .nav-actions { width: 100%; justify-content: stretch; }
+        .tool-button { flex: 1 1 130px; justify-content: center; }
+        .scene { border-radius: 14px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand">
+          <p>Pachyrhinosaurus-vándorlás</p>
+          <h1>Pacsi kalandja</h1>
+        </div>
+        <nav class="nav-actions" aria-label="Játék menü">
+          <a class="tool-button secondary" href="index.html">Főmenü</a>
+          <button class="tool-button secondary" type="button" id="backButton">Vissza</button>
+          <button class="tool-button" type="button" id="restartButton">Újrakezdés</button>
+        </nav>
+      </header>
+
+      <section class="scene" aria-live="polite">
+        <div class="image-wrap">
+          <img id="sceneImage" src="" alt="" />
+          <div class="status">
+            <span class="badge" id="statusBadge">Kaland folyamatban</span>
+            <span class="badge" id="stepBadge">1. jelenet</span>
+          </div>
+        </div>
+        <article class="story-panel">
+          <h2 id="sceneTitle"></h2>
+          <div class="story-text" id="storyText"></div>
+          <div class="choices" id="choices"></div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const IMAGE_DIR = "pacsi/";
+
+      const GAME_NODES = {
+        nest: {
+          titleHu: "A legkisebb tojás",
+          image: "570.jpg",
+          badge: "A csorda születése",
+          bodyHu: [
+            "Hetvenmillió évvel ezelőtt a nagy északi síkságon repedni kezd egy apró tojás. Kibújik belőle Pacsi, a legkisebb pahírhinoszaurusz-bébi.",
+            "A testvérei nagyobbak, Morcos pedig rögtön félretolja őt a legjobb falatoktól. Pacsi kicsi, de kíváncsi. A fészek szélén valami mozog a páfrányok között."
+          ],
+          choices: [
+            { labelHu: "Pacsi óvatosan anyához bújik", target: "safeNest", tone: "safe" },
+            { labelHu: "Pacsi megnézi, mi zörög", target: "troodonBite", tone: "danger" }
+          ]
+        },
+        safeNest: {
+          titleHu: "Jó orr a veszélyhez",
+          image: "images (2).jpeg",
+          badge: "Okos kezdés",
+          bodyHu: [
+            "Pacsi anyja mellé húzódik. A bokorból egy Troodon villan elő, de túl későn: a felnőttek döngő lépése elriasztja.",
+            "Morcos azt morogja, hogy Pacsi gyáva. Pacsi viszont megtanulja: az óvatosság néha gyorsabb, mint a láb."
+          ],
+          choices: [
+            { labelHu: "Pacsi megfigyeli a felnőtteket", target: "practice" },
+            { labelHu: "Pacsi visszaszól Morcosnak", target: "headbutt", tone: "danger" }
+          ]
+        },
+        troodonBite: {
+          titleHu: "A gallér lyuka",
+          image: "images.jpeg",
+          badge: "Sebhely",
+          bodyHu: [
+            "Pacsi túl messzire kóborol. A Troodon a gallérjánál kapja el, de Pacsi minden erejével tekereg és sivít.",
+            "A csorda vezére elüldözi a ragadozót. Pacsi megmenekül, de egy kerek lyuk marad a gallérján. Morcos csúfolja, Boróka viszont később azt mondja: ez bátorságjel."
+          ],
+          choices: [
+            { labelHu: "Pacsi büszkén viseli a jelet", target: "meetBoroka", tone: "safe" },
+            { labelHu: "Pacsi elbújik szégyenében", target: "hideAshamed", tone: "danger" }
+          ]
+        },
+        hideAshamed: {
+          titleHu: "Egyedül a bokorban",
+          image: "images (1).jpeg",
+          badge: "Veszélyes kerülő",
+          bodyHu: [
+            "Pacsi elbújik, hogy senki se lássa a lyukat. Csakhogy egyedül lenni a krétakori erdőben nem jó ötlet.",
+            "Egy apró ragadozó túl közel merészkedik. Pacsinak vissza kell szaladnia a csordához, mielőtt nagy baj lesz."
+          ],
+          choices: [
+            { labelHu: "Visszafutok a csordához", target: "meetBoroka", tone: "safe" },
+            { labelHu: "Még mélyebbre bújok", target: "lostEnding", tone: "danger" }
+          ]
+        },
+        lostEnding: {
+          titleHu: "Túl messze a csordától",
+          image: "images (3).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi olyan mélyre bújik, hogy már nem hallja a csorda hívását. Mire visszatalál, a vándorlás elindult.",
+            "Egy kis pahírhinoszaurusznak a csorda mellett van a helye. Ez a kaland most nem sikerült."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        meetBoroka: {
+          titleHu: "Boróka a tisztáson",
+          image: "images (4).jpeg",
+          badge: "Új barát",
+          bodyHu: [
+            "A következő napokban Pacsi találkozik Borókával, egy gyors és figyelmes fiatal pahírhinoszaurusszal. Boróka nem nevet a lyukon, hanem megkérdezi, fájt-e.",
+            "Morcos közben nagyokat dönget a fejével, hogy mindenki őt nézze."
+          ],
+          choices: [
+            { labelHu: "Pacsi kedvesen beszél Borókával", target: "practice", tone: "safe" },
+            { labelHu: "Pacsi Morcost utánozva fát dönt", target: "treeFail", tone: "danger" }
+          ]
+        },
+        headbutt: {
+          titleHu: "Fejelős lecke",
+          image: "images (8).jpeg",
+          badge: "Morcos ereje",
+          bodyHu: [
+            "Pacsi visszaszól Morcosnak, mire Morcos játékosnak induló, de túl erős lökéssel félretolja.",
+            "Pacsi rájön: Morcost erőben most nem győzi le. Valami mást kell megtanulnia."
+          ],
+          choices: [
+            { labelHu: "Pacsi inkább figyel és tanul", target: "practice", tone: "safe" },
+            { labelHu: "Pacsi újra nekimegy Morcosnak", target: "bumpedEnding", tone: "danger" }
+          ]
+        },
+        bumpedEnding: {
+          titleHu: "Túl makacs próbálkozás",
+          image: "images (8).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi újra nekiront Morcosnak. Morcos nagyobb, nehezebb, és Pacsi egy puha páfránykupacban landol.",
+            "Nem sérül meg, de a csorda nélküle indulna tovább. Ez most rossz taktika volt."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        treeFail: {
+          titleHu: "Az ág bosszúja",
+          image: "images (5).jpeg",
+          badge: "Vicces baj",
+          bodyHu: [
+            "Pacsi Morcost utánozva nekimegy egy fiatal fának. A fa nem dől ki, viszont egy ág beleakad Pacsi gallérjának lyukába.",
+            "Boróka elfojtott nevetéssel segít kiszabadulni. Pacsi megtanulja: nem kell Morcosnak látszania ahhoz, hogy bátor legyen."
+          ],
+          choices: [
+            { labelHu: "Nevetek magamon és tanulok", target: "practice", tone: "safe" },
+            { labelHu: "Dühösen egyedül indulok tovább", target: "lostEnding", tone: "danger" }
+          ]
+        },
+        practice: {
+          titleHu: "Pacsi titkos erőssége",
+          image: "dinoszauroszok_a_fold_urai_3d-ben_6.jpg.webp",
+          badge: "Ész és kitartás",
+          bodyHu: [
+            "Pacsi figyeli a felnőtteket. Megtanulja, honnan jön a szél, melyik madárhang jelent veszélyt, és hol puhább a talaj.",
+            "Morcos gyorsan nő és erős lesz. Pacsi kisebb marad, de egyre jobban érti a világ jeleit."
+          ],
+          choices: [
+            { labelHu: "Indulok a nagy vándorlásra", target: "migration", tone: "safe" }
+          ]
+        },
+        migration: {
+          titleHu: "A nagy vándorlás",
+          image: "images (7).jpeg",
+          badge: "Úton dél felé",
+          bodyHu: [
+            "A hideg szelek megérkeznek. A csorda dél felé indul, ahol több a táplálék. Boróka csordája is ugyanarra tart.",
+            "A síkságon hosszú sorokban dübörögnek a pahírhinoszauruszok. A távolban füstszag keveredik az eső illatával."
+          ],
+          choices: [
+            { labelHu: "Pacsi a csorda közepén marad", target: "fire", tone: "safe" },
+            { labelHu: "Pacsi előresiet Borókát keresni", target: "separated", tone: "danger" }
+          ]
+        },
+        separated: {
+          titleHu: "Túl gyors szív",
+          image: "images (6).jpeg",
+          badge: "Elválás",
+          bodyHu: [
+            "Pacsi előresiet, mert látni akarja Borókát. A füst egyre sűrűbb, a csorda hangja pedig elhalkul mögötte.",
+            "Egy villám becsap, és lángra kapnak a száraz fák. Pacsi rossz oldalon marad."
+          ],
+          choices: [
+            { labelHu: "A folyó felé menekülök", target: "river", tone: "safe" },
+            { labelHu: "Visszafutok a füstbe", target: "smokeEnding", tone: "danger" }
+          ]
+        },
+        smokeEnding: {
+          titleHu: "Túl sok füst",
+          image: "images (6).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi visszarohan a füstbe, de alig lát valamit. Köhög, botladozik, és egy felnőttnek kell kivezetnie.",
+            "Megmenekül, de lemarad Borókáról és Morcosról. Ez a kaland most nem jó irányba ment."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        fire: {
+          titleHu: "Tűz a fenyők között",
+          image: "images (6).jpeg",
+          badge: "Természeti veszély",
+          bodyHu: [
+            "A villám után tűz fut végig az erdő szélén. A csorda megijed, Morcos pedig csak előre akar törni.",
+            "Pacsi észreveszi, hogy a szél a füstöt balra viszi. Jobbra talán tisztább az út."
+          ],
+          choices: [
+            { labelHu: "Jobbra terelem a kicsiket", target: "river", tone: "safe" },
+            { labelHu: "Morcost követem a füstbe", target: "smokeEnding", tone: "danger" }
+          ]
+        },
+        river: {
+          titleHu: "A jeges folyó",
+          image: "images (9).jpeg",
+          badge: "Átkelés",
+          bodyHu: [
+            "A csorda egy széles folyóhoz ér. A víz hideg és gyors. A túlparton Boróka hangját hallod.",
+            "Morcos azt mondja, csak a legerősebbek menjenek előre. Pacsi lát egy sekélyebb, kavicsos részt kicsit lejjebb."
+          ],
+          choices: [
+            { labelHu: "A sekélyebb átkelőt választom", target: "borokaSlip", tone: "safe" },
+            { labelHu: "Morcos után ugrom a mély vízbe", target: "washedEnding", tone: "danger" }
+          ]
+        },
+        washedEnding: {
+          titleHu: "Túl mély víz",
+          image: "images (9).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi Morcos után ugrik, de a mély víz elsodorja. Egy homokpadon partot ér, teljesen kimerülve.",
+            "A csorda messze jár. Egy okos vezető nem mindig a legrövidebb utat választja."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        borokaSlip: {
+          titleHu: "Boróka bajban",
+          image: "images (4).jpeg",
+          badge: "Barátság",
+          bodyHu: [
+            "A sekélyebb résznél több kicsi is átjut. Boróka viszont megcsúszik a köveken, és sántítani kezd.",
+            "Morcos azt morogja, hogy a csordának haladnia kell. Pacsi tudja, hogy Borókát nem lehet hátrahagyni."
+          ],
+          choices: [
+            { labelHu: "Pacsi Boróka mellett marad", target: "coast", tone: "safe" },
+            { labelHu: "Pacsi Morcossal tart", target: "aloneBorokaEnding", tone: "danger" }
+          ]
+        },
+        aloneBorokaEnding: {
+          titleHu: "Rossz döntés egy barátról",
+          image: "images (3).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi Morcost követi, de közben végig Borókára gondol. A csorda gyorsan halad, Boróka pedig lemarad.",
+            "Pacsi későn fordul vissza. Egy vezető nem hagyja hátra azt, aki segítségre szorul."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        coast: {
+          titleHu: "Parti kerülő",
+          image: "images (5).jpeg",
+          badge: "Lassabb, de okos",
+          bodyHu: [
+            "Pacsi Borókával lassabban halad a part mentén. Rákok csattognak a kövek közt, a távolban hatalmas szárnyas hüllők köröznek.",
+            "Boróka hálás, Morcos viszont már messze jár. Estére új nyomokat találtok: a csorda a fenyőerdő felé ment."
+          ],
+          choices: [
+            { labelHu: "Az erdőben követjük a nyomokat", target: "forest", tone: "safe" },
+            { labelHu: "Nyílt parton sietünk tovább", target: "openCoastEnding", tone: "danger" }
+          ]
+        },
+        openCoastEnding: {
+          titleHu: "Túl nyílt terep",
+          image: "images (5).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "A nyílt part gyorsabbnak tűnik, de nincs hova bújni. A magasból éles árnyék suhan át felettetek.",
+            "Pacsi és Boróka visszafordulnak az erdőbe, de így túl sok időt veszítenek."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        forest: {
+          titleHu: "Alvó ragadozó",
+          image: "images (2).jpeg",
+          badge: "Csendben",
+          bodyHu: [
+            "Az erdő mélyén egy Gorgosaurus alszik a páfrányok között. Pacsi azonnal megállítja Borókát.",
+            "Morcos biztosan átdübörögne mellette. Pacsi viszont észreveszi a madarak csendjét és a ragadozó lassú lélegzetét."
+          ],
+          choices: [
+            { labelHu: "Lábujjhegyen kerülünk", target: "winterGrounds", tone: "safe" },
+            { labelHu: "Rohanva átvágunk", target: "wakeGorgonEnding", tone: "danger" }
+          ]
+        },
+        wakeGorgonEnding: {
+          titleHu: "Felébredt a Gorgosaurus",
+          image: "images (2).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi rohanni kezd, de a száraz ágak hangosan roppannak. A Gorgosaurus felkapja a fejét.",
+            "A két fiatal dinoszaurusz megmenekül, de rossz irányba futnak, és elveszítik a csorda nyomát."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        winterGrounds: {
+          titleHu: "Újra együtt",
+          image: "dinoszauroszok_a_fold_urai_3d-ben_6.jpg.webp",
+          badge: "Téli menedék",
+          bodyHu: [
+            "Pacsi és Boróka elérik a téli legelőt. A csordák összeérnek, de a régi vezér már nincs velük. Morcos nagyra nőtt, és átveszi a vezetést.",
+            "Morcos gyorsabb utat akar: át a befagyott tavon. Pacsi látja, hogy a jég tavasziasan vékony."
+          ],
+          choices: [
+            { labelHu: "Pacsi figyelmezteti a csordát", target: "iceWarning", tone: "safe" },
+            { labelHu: "Pacsi nem szól, nehogy kinevessék", target: "iceCrackEnding", tone: "danger" }
+          ]
+        },
+        iceCrackEnding: {
+          titleHu: "Roppan a jég",
+          image: "images (7).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "A csorda rámegy a jégre. Először csak halk reccsenés hallatszik, aztán egy nagyobb repedés fut végig a tó felszínén.",
+            "Mindenki visszafordul, de nagy zűrzavar támad. Pacsi tudta volna, mit kell tenni, csak nem mert szólni."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        iceWarning: {
+          titleHu: "Pacsi szót kér",
+          image: "images (7).jpeg",
+          badge: "Vezetői próba",
+          bodyHu: [
+            "Pacsi kiáll a csorda elé. Azt mondja, a jég túl fényes, túl vizes, és nem tartaná meg a kicsiket.",
+            "Morcos dühös. Szerinte Pacsi csak el akarja venni tőle a vezetést."
+          ],
+          choices: [
+            { labelHu: "Pacsi nyugodtan magyaráz", target: "morcosDuel", tone: "safe" },
+            { labelHu: "Pacsi nekiront Morcosnak", target: "duelLoseEnding", tone: "danger" }
+          ]
+        },
+        duelLoseEnding: {
+          titleHu: "Erőből nem megy",
+          image: "images (8).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi dühből támad Morcosra. Morcos erősebb, és Pacsi hamar a földre kerül.",
+            "Boróka segít felállni, de a csorda bizalma meginog. Pacsinak nem az ereje a legnagyobb fegyvere."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        morcosDuel: {
+          titleHu: "Morcos kihívása",
+          image: "images (8).jpeg",
+          badge: "Testvéri vita",
+          bodyHu: [
+            "Pacsi nyugodtan beszél, de Morcos párbajra hívja. A csorda figyel. Pacsi tudja, hogy nem győzhet tiszta erővel.",
+            "A tó szélén egy kidőlt fa és puha hófolt van. Pacsi használhatja a terepet."
+          ],
+          choices: [
+            { labelHu: "Pacsi félreugrik és kifárasztja Morcost", target: "gorgonAttack", tone: "safe" },
+            { labelHu: "Pacsi szemtől szemben ütközik", target: "duelLoseEnding", tone: "danger" }
+          ]
+        },
+        gorgonAttack: {
+          titleHu: "Ragadozók a hóban",
+          image: "images (2).jpeg",
+          badge: "Nagy veszély",
+          bodyHu: [
+            "Morcos kifárad, de ekkor a Gorgosaurus falka előtör a fák közül. Morcos a csorda szélén reked.",
+            "Pacsi megszökhetne Borókával, de Morcos mégis a testvére."
+          ],
+          choices: [
+            { labelHu: "Pacsi visszafordul Morcosért", target: "rallyHerd", tone: "safe" },
+            { labelHu: "Pacsi csak Borókát menti", target: "selfishEnding", tone: "danger" }
+          ]
+        },
+        selfishEnding: {
+          titleHu: "Nem csak ketten vannak",
+          image: "images (3).jpeg",
+          badge: "Próbáld újra",
+          bodyHu: [
+            "Pacsi Borókával biztonságba jut, de a csorda szétszóródik. Morcos csapdába kerül, a kicsik pedig pánikba esnek.",
+            "Pacsi rájön, hogy a vezető nem csak a legkedvesebb barátját védi."
+          ],
+          terminal: "lose",
+          choices: [
+            { labelHu: "Újra próbálom", action: "restart", tone: "danger" }
+          ]
+        },
+        rallyHerd: {
+          titleHu: "A csorda fala",
+          image: "images (4).jpeg",
+          badge: "Bátorság",
+          bodyHu: [
+            "Pacsi nem egyedül támad. Mély, erős hangon hívja a csordát, és Boróka is mellé áll.",
+            "A felnőttek félkörbe rendeződnek, a kicsik középre húzódnak, Morcos pedig végre megérti Pacsi tervét."
+          ],
+          choices: [
+            { labelHu: "Együtt elűzzük a ragadozókat", target: "leaderWin", tone: "safe" }
+          ]
+        },
+        leaderWin: {
+          titleHu: "Pacsi, a vezér",
+          image: "570.jpg",
+          badge: "Győzelem",
+          bodyHu: [
+            "A Gorgosaurusok nem mernek nekimenni az összezárt csordának. Visszahúzódnak az erdőbe.",
+            "Morcos lehajtja a fejét Pacsi előtt. Nem lett gyenge, csak megtanulta: a jó vezér figyel, gondolkodik, és a csordát védi.",
+            "Boróka Pacsi mellé lép. A vándorlás folytatódik, de most már Pacsi vezeti a pahírhinoszauruszokat."
+          ],
+          terminal: "win",
+          choices: [
+            { labelHu: "Új kaland", action: "restart", tone: "safe" }
+          ]
+        }
+      };
+
+      const state = {
+        current: "nest",
+        trail: [],
+        steps: 1
+      };
+
+      const imageEl = document.getElementById("sceneImage");
+      const titleEl = document.getElementById("sceneTitle");
+      const textEl = document.getElementById("storyText");
+      const choicesEl = document.getElementById("choices");
+      const backButton = document.getElementById("backButton");
+      const restartButton = document.getElementById("restartButton");
+      const statusBadge = document.getElementById("statusBadge");
+      const stepBadge = document.getElementById("stepBadge");
+
+      function renderNode(id) {
+        const node = GAME_NODES[id];
+        if (!node) {
+          throw new Error(`Hiányzó jelenet: ${id}`);
+        }
+
+        state.current = id;
+        imageEl.src = IMAGE_DIR + node.image;
+        imageEl.alt = node.titleHu;
+        titleEl.textContent = node.titleHu;
+        statusBadge.textContent = node.terminal === "win"
+          ? "Sikeres vezérré válás"
+          : node.terminal === "lose"
+            ? "Próbáld újra"
+            : node.badge || "Kaland folyamatban";
+        stepBadge.textContent = `${state.steps}. jelenet`;
+
+        textEl.replaceChildren(
+          ...node.bodyHu.map((paragraph) => {
+            const p = document.createElement("p");
+            p.textContent = paragraph;
+            return p;
+          })
+        );
+
+        choicesEl.className = `choices ${node.choices.length > 1 ? "multi" : ""}`;
+        choicesEl.replaceChildren(
+          ...node.choices.map((choice) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = `choice-button ${choice.tone || ""}`.trim();
+            button.textContent = choice.labelHu;
+            button.addEventListener("click", () => {
+              if (choice.action === "restart") {
+                restart();
+                return;
+              }
+              state.trail.push(state.current);
+              state.steps += 1;
+              renderNode(choice.target);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            });
+            return button;
+          })
+        );
+
+        backButton.disabled = state.trail.length === 0;
+      }
+
+      function restart() {
+        state.current = "nest";
+        state.trail = [];
+        state.steps = 1;
+        renderNode("nest");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      backButton.addEventListener("click", () => {
+        const previous = state.trail.pop();
+        if (!previous) return;
+        state.steps = Math.max(1, state.steps - 1);
+        renderNode(previous);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      restartButton.addEventListener("click", restart);
+      renderNode("nest");
+    </script>
+  </body>
+</html>
