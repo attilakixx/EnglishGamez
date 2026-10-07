@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7ff">
+  <title>Picture Words • EnglishGamez</title>
+  <style>
+    :root { font-family: "Trebuchet MS", system-ui, sans-serif; color: #17304e; background: #f4f7ff; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 18px; background: radial-gradient(ellipse at 8% 0%, #dcecff 0, transparent 36%), radial-gradient(ellipse at 100% 100%, #dcfaec 0, transparent 38%), #f4f7ff; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid #2563eb; outline-offset: 3px; }
+    .shell { width: min(100%, 760px); margin: 0 auto; }
+    .top { display: flex; justify-content: space-between; align-items: center; margin: 0 0 14px; }
+    .brand { color: #355270; font-weight: 900; letter-spacing: .04em; }
+    .back { color: #355270; font-weight: 800; text-decoration: none; padding: 9px 14px; border-radius: 14px; background: #fff; box-shadow: 0 3px 0 #dce4f1; }
+    .card { background: #fff; border-radius: 28px; padding: clamp(20px, 5vw, 36px); box-shadow: 0 16px 42px #17304e18; }
+    h1 { margin: 0; text-align: center; font-size: clamp(2rem, 7vw, 3.25rem); line-height: 1.1; letter-spacing: -.04em; }
+    h2 { margin: 0 0 8px; text-align: center; font-size: clamp(1.45rem, 5vw, 2rem); }
+    .intro { text-align: center; color: #58708d; font-size: 1.1rem; margin: 10px 0 24px; }
+    .screen[hidden] { display: none; }
+    .menu { display: grid; gap: 13px; }
+    .big-button { width: 100%; min-height: 70px; border: 0; border-radius: 19px; background: #eaf2ff; color: #183b68; font-size: 1.2rem; font-weight: 900; box-shadow: 0 5px 0 #c6d9f7; transition: transform .12s, box-shadow .12s; }
+    .big-button:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #c6d9f7; }
+    .big-button:disabled { cursor: wait; opacity: .6; transform: none; }
+    .big-button.green { background: #e2f9eb; color: #176337; box-shadow: 0 5px 0 #b5e9c7; }
+    .big-button.gold { background: #fff5ce; color: #775000; box-shadow: 0 5px 0 #f2df9e; }
+    .progress-wrap { margin: 20px 0 14px; }
+    .progress-label { display: flex; justify-content: space-between; gap: 12px; font-weight: 900; color: #526984; margin-bottom: 7px; }
+    .progress { height: 13px; border-radius: 20px; overflow: hidden; background: #e8eef7; }
+    .progress > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#4c8cff,#55d395); transition: width .25s; }
+    .picture-frame { height: clamp(210px, 40vh, 330px); display: grid; place-items: center; overflow: hidden; border: 3px solid #edf2fa; border-radius: 23px; background: linear-gradient(145deg,#f8fbff,#f0f8ff); }
+    #question-image { width: auto; height: auto; max-width: min(100%, 368px); max-height: min(100%, 300px); object-fit: contain; padding: 10px; }
+    .word-caption { min-height: 1.7em; margin: 10px 0 2px; text-align: center; color: #526984; font-size: 1.2rem; font-weight: 900; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .choice { min-height: 64px; padding: 11px 10px; border: 3px solid #e2eaf5; border-radius: 17px; color: #244564; background: #f9fbff; font-size: clamp(1rem, 4vw, 1.2rem); font-weight: 900; box-shadow: 0 3px 0 #e2eaf5; }
+    .choice:hover:not(:disabled) { border-color: #8eb7fa; background: #f0f6ff; }
+    .choice:disabled { cursor: default; }
+    .choice.correct { color: #155b31; border-color: #44be72; background: #dcf8e5; box-shadow: 0 3px 0 #a2e0b6; }
+    .choice.wrong { color: #8b2222; border-color: #ed6666; background: #ffe3e3; box-shadow: 0 3px 0 #f3b8b8; }
+    .feedback { min-height: 34px; margin: 12px 0 4px; text-align: center; font-size: 1.1rem; font-weight: 900; }
+    .feedback.good { color: #18723b; } .feedback.bad { color: #ab3030; }
+    .next { display: block; margin: 8px auto 0; max-width: 420px; }
+    .score { margin: 15px 0 20px; text-align: center; color: #375575; font-size: 1.2rem; font-weight: 800; }
+    .leaderboard { margin: 20px 0; padding: 0; list-style: none; }
+    .leader-row { display: grid; grid-template-columns: 48px 1fr auto; align-items: center; gap: 10px; min-height: 54px; padding: 7px 13px; border-bottom: 1px solid #edf1f7; font-weight: 800; }
+    .leader-row:first-child { background: #fff8df; border-radius: 14px 14px 0 0; }
+    .rank { color: #7890aa; } .leader-score { color: #2762aa; white-space: nowrap; }
+    .entry { display: grid; grid-template-columns: 1fr auto; gap: 10px; margin: 16px 0; }
+    .entry input { min-width: 0; border: 2px solid #cdd9e9; border-radius: 13px; padding: 13px; }
+    .entry button { border: 0; border-radius: 13px; padding: 12px 17px; color: #fff; background: #3578d4; font-weight: 900; }
+    .note { text-align: center; color: #71839a; font-size: .88rem; }
+    .footer { text-align: center; color: #70839a; margin: 15px 0 0; font-size: .9rem; }
+    @media (max-width: 420px) { body { padding: 10px; } .choices { gap: 9px; } .choice { min-height: 58px; } .card { border-radius: 22px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top"><span class="brand">🇬🇧 ENGLISHGAMEZ</span><a class="back" href="index.html">⌂ Főmenü</a></header>
+    <section class="card">
+      <section id="home-screen" class="screen">
+        <h1>Picture Words</h1>
+        <p class="intro">Nézd meg a képet, válaszd ki a szót, aztán mondd utánam! 🔊</p>
+        <nav class="menu" aria-label="Játékmódok">
+          <button class="big-button" id="start-quiz" disabled>🎯 20 kérdéses játék</button>
+          <button class="big-button green" id="start-streak" disabled>🏆 Szósorozat · toplistás mód</button>
+          <button class="big-button gold" id="open-leaderboard">🥇 Toplista</button>
+        </nav>
+      </section>
+
+      <section id="game-screen" class="screen" hidden>
+        <h2 id="game-title">20 kérdéses játék</h2>
+        <div class="progress-wrap">
+          <div class="progress-label"><span id="round-label">1. kérdés</span><span id="score-label">⭐ 0</span></div>
+          <div class="progress" role="progressbar" aria-label="Játék előrehaladása"><span id="progress-bar"></span></div>
+        </div>
+        <div class="picture-frame"><img id="question-image" alt="Kép alapján válaszd ki az angol szót"></div>
+        <p id="word-caption" class="word-caption" lang="hu"></p>
+        <div id="choices" class="choices" aria-label="Válaszlehetőségek"></div>
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+        <button id="next-question" class="big-button next" hidden>Következő kép ➜</button>
+      </section>
+
+      <section id="result-screen" class="screen" hidden>
+        <h2 id="result-title">Szép munka! 🎉</h2>
+        <p id="result-score" class="score"></p>
+        <div id="name-entry" hidden>
+          <p class="intro">Új rekord! Mi legyen a neved a toplistán?</p>
+          <form id="name-form" class="entry"><input id="player-name" maxlength="18" required aria-label="Neved" placeholder="A neved"><button type="submit">Mentés</button></form>
+        </div>
+        <button id="result-leaderboard" class="big-button gold">🥇 Toplista</button>
+        <button id="play-again" class="big-button green" style="margin-top:12px">🔄 Játszom még!</button>
+      </section>
+
+      <section id="leaderboard-screen" class="screen" hidden>
+        <h2>🏆 Szósorozat toplista</h2>
+        <p class="intro">Hány szót találsz el egymás után?</p>
+        <ol id="leaderboard" class="leaderboard"></ol>
+        <p class="note">A toplista ezen a böngészőn és eszközön mentődik el.</p>
+        <button id="leaderboard-home" class="big-button">⬅ Vissza a játékokhoz</button>
+      </section>
+    </section>
+    <p id="load-status" class="footer" aria-live="polite">A képes szótár betöltése…</p>
+  </main>
+
+  <script src="english_game/oxford-words.js"></script>
+  <script>
+    'use strict';
+    let words = [];
+    const seedScores = [
+      { name: 'Villám McQueen', score: 12, seed: true },
+      { name: 'Mickey egér', score: 10, seed: true },
+      { name: 'Sonic', score: 8, seed: true },
+      { name: 'Bluey', score: 7, seed: true },
+      { name: 'Skye (Mancs Őrjárat)', score: 6, seed: true },
+      { name: 'Mario', score: 5, seed: true },
+      { name: 'Elsa', score: 4, seed: true },
+      { name: 'Peppa malac', score: 3, seed: true },
+      { name: 'Dory', score: 2, seed: true },
+      { name: 'Pikachu', score: 1, seed: true }
+    ];
+    const storageKey = 'englishGamezPictureWordsLeaderboardV1';
+    const screens = ['home-screen', 'game-screen', 'result-screen', 'leaderboard-screen'].map(id => document.getElementById(id));
+    const $ = id => document.getElementById(id);
+    const hungarianWords = {
+      run: 'fut', jump: 'ugrik', climb: 'mászik', dance: 'táncol', rollerblade: 'görkorcsolyázik', 'ride a bike': 'biciklizik',
+      big: 'nagy', small: 'kicsi', old: 'régi', new: 'új', hot: 'meleg', cold: 'hideg', hungry: 'éhes', thirsty: 'szomjas', slow: 'lassú', fast: 'gyors', long: 'hosszú', short: 'rövid',
+      snake: 'kígyó', bat: 'denevér', fox: 'róka', hedgehog: 'sün', mouse: 'egér', frog: 'béka',
+      chair: 'szék', notebook: 'füzet', crayon: 'zsírkréta', ruler: 'vonalzó',
+      red: 'piros', brown: 'barna', yellow: 'sárga', black: 'fekete', blue: 'kék', grey: 'szürke', white: 'fehér', pink: 'rózsaszín', green: 'zöld', orange: 'narancssárga',
+      mum: 'anya', granny: 'nagymama', dad: 'apa', sister: 'lánytestvér', brother: 'fiútestvér', grandad: 'nagypapa',
+      tired: 'fáradt', happy: 'boldog', sad: 'szomorú', angry: 'mérges',
+      bananas: 'banán', apples: 'alma', cakes: 'sütemény', tomatoes: 'paradicsom', sausages: 'kolbász', pears: 'körte', peaches: 'őszibarack', melons: 'sárgadinnye', olives: 'olajbogyó', oranges: 'narancs',
+      cupboard: 'szekrény', box: 'doboz', table: 'asztal', bed: 'ágy',
+      eleven: 'tizenegy', twelve: 'tizenkettő', thirteen: 'tizenhárom', fourteen: 'tizennégy', fifteen: 'tizenöt', sixteen: 'tizenhat', seventeen: 'tizenhét', eighteen: 'tizennyolc', nineteen: 'tizenkilenc', twenty: 'húsz',
+      wings: 'szárnyak', head: 'fej', teeth: 'fogak', tail: 'farok', legs: 'lábak', arms: 'karok', ears: 'fülek', nose: 'orr', mouth: 'száj', eyes: 'szemek',
+      bathroom: 'fürdőszoba', bedroom: 'hálószoba', kitchen: 'konyha', hall: 'előszoba', 'living room': 'nappali', garden: 'kert',
+      'pencil case': 'tolltartó', pen: 'toll', bag: 'táska', pencil: 'ceruza', rubber: 'radír', book: 'könyv',
+      apple: 'alma', bus: 'busz', cat: 'macska', dog: 'kutya', egg: 'tojás', guitar: 'gitár', house: 'ház', insect: 'rovar', jacket: 'dzseki', king: 'király', lake: 'tó', queen: 'királynő', rabbit: 'nyúl', scooter: 'roller', train: 'vonat', umbrella: 'esernyő', violin: 'hegedű', window: 'ablak', zebra: 'zebra',
+      chicken: 'csirke', cow: 'tehén', horse: 'ló', goat: 'kecske', sheep: 'juh', farm: 'farm', tractor: 'traktor', duck: 'kacsa',
+      bike: 'bicikli', ball: 'labda', doll: 'baba', car: 'autó', plane: 'repülőgép', lorry: 'teherautó', motorbike: 'motorkerékpár', taxi: 'taxi',
+      walk: 'sétál', swim: 'úszik', fly: 'repül', sing: 'énekel'
+    };
+    let mode = 'quiz';
+    let deck = [];
+    let round = 0;
+    let score = 0;
+    let answered = false;
+    let lastResult = null;
+
+    function showScreen(id) {
+      screens.forEach(screen => { screen.hidden = screen.id !== id; });
+    }
+    function shuffle(list) {
+      const copy = list.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+    function speakAnswer(word) {
+      if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(`${word}. Now you say it.`);
+      utterance.lang = 'en-GB';
+      utterance.rate = 0.82;
+      const voices = window.speechSynthesis.getVoices();
+      const british = voices.find(voice => /^en-GB$/i.test(voice.lang)) || voices.find(voice => /british|united kingdom/i.test(voice.name));
+      if (british) utterance.voice = british;
+      window.speechSynthesis.speak(utterance);
+    }
+    function startGame(selectedMode) {
+      if (words.length < 20) return;
+      mode = selectedMode;
+      const uniqueWords = [...new Map(words.map(item => [item.word.toLocaleLowerCase(), item])).values()];
+      deck = shuffle(uniqueWords).slice(0, mode === 'quiz' ? 20 : uniqueWords.length);
+      round = 0;
+      score = 0;
+      $('game-title').textContent = mode === 'quiz' ? '20 kérdéses játék' : 'Szósorozat';
+      showScreen('game-screen');
+      showQuestion();
+    }
+    function showQuestion() {
+      if (mode === 'quiz' && round >= deck.length) return finishGame();
+      if (mode === 'streak' && round >= deck.length) {
+        deck = shuffle([...new Map(words.map(item => [item.word.toLocaleLowerCase(), item])).values()]);
+      }
+      answered = false;
+      const question = deck[round % deck.length];
+      $('round-label').textContent = mode === 'quiz' ? `${round + 1}. kérdés / 20` : `${round + 1}. szó egymás után`;
+      $('score-label').textContent = `⭐ ${score}`;
+      $('progress-bar').style.width = mode === 'quiz' ? `${round / 20 * 100}%` : '100%';
+      $('question-image').src = 'english_game/' + question.file.split('/').map(encodeURIComponent).join('/');
+      $('question-image').alt = 'Kép az angol szó felismeréséhez';
+      $('word-caption').textContent = hungarianWords[question.word.toLocaleLowerCase()] || '';
+      $('feedback').textContent = '';
+      $('feedback').className = 'feedback';
+      $('next-question').hidden = true;
+      const uniqueDistractors = [...new Map(words.filter(item => item.word !== question.word).map(item => [item.word.toLocaleLowerCase(), item])).values()];
+      const distractors = shuffle(uniqueDistractors).slice(0, 3);
+      const options = shuffle([question, ...distractors]);
+      const choices = $('choices');
+      choices.replaceChildren();
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'choice';
+        button.textContent = option.word;
+        button.addEventListener('click', () => answer(button, option, question, options));
+        choices.append(button);
+      });
+    }
+    function answer(selectedButton, selected, question, options) {
+      if (answered) return;
+      answered = true;
+      const buttons = [...$('choices').children];
+      buttons.forEach((button, index) => {
+        button.disabled = true;
+        if (options[index].word === question.word) button.classList.add('correct');
+      });
+      const right = selected.word === question.word;
+      const feedback = $('feedback');
+      if (right) {
+        score += 1;
+        feedback.textContent = 'Helyes! 🌟 Mondd utánam!';
+        feedback.classList.add('good');
+      } else {
+        selectedButton.classList.add('wrong');
+        feedback.textContent = `A helyes szó: ${question.word}. Mondd utánam!`;
+        feedback.classList.add('bad');
+      }
+      $('score-label').textContent = `⭐ ${score}`;
+      $('progress-bar').style.width = mode === 'quiz' ? `${(round + 1) / 20 * 100}%` : '100%';
+      speakAnswer(question.word);
+      if (mode === 'streak' && !right) {
+        window.setTimeout(() => finishGame(), 500);
+        return;
+      }
+      if (mode === 'quiz' && round === 19) {
+        $('next-question').textContent = 'Eredmény ➜';
+      } else {
+        $('next-question').textContent = 'Következő kép ➜';
+      }
+      $('next-question').hidden = false;
+    }
+    function finishGame() {
+      lastResult = { mode, score };
+      $('result-title').textContent = mode === 'quiz' ? 'Vége a 20 kérdésnek! 🎉' : 'Vége a szósorozatnak! 🏁';
+      $('result-score').textContent = mode === 'quiz' ? `Helyes válaszok: ${score} / 20` : `Hibátlan szósorozat: ${score} pont`;
+      const board = getLeaderboard();
+      const cutoff = board.length < 10 ? 0 : board[board.length - 1].score;
+      const qualifies = mode === 'streak' && score > 0 && (board.length < 10 || score > cutoff);
+      $('name-entry').hidden = !qualifies;
+      if (qualifies) {
+        $('player-name').value = '';
+        window.setTimeout(() => $('player-name').focus(), 0);
+      }
+      showScreen('result-screen');
+    }
+    function getLeaderboard() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || 'null');
+        if (Array.isArray(saved)) return saved.filter(item => typeof item.name === 'string' && Number.isFinite(item.score)).sort((a, b) => b.score - a.score).slice(0, 10);
+      } catch { /* use the starter board */ }
+      return seedScores.slice();
+    }
+    function saveScore(name, points) {
+      const board = getLeaderboard();
+      board.push({ name: name.trim().slice(0, 18), score: points, seed: false });
+      board.sort((a, b) => b.score - a.score);
+      try { localStorage.setItem(storageKey, JSON.stringify(board.slice(0, 10))); } catch { /* the game still works without storage */ }
+    }
+    function renderLeaderboard() {
+      const list = $('leaderboard');
+      list.replaceChildren();
+      getLeaderboard().forEach((entry, index) => {
+        const row = document.createElement('li');
+        row.className = 'leader-row';
+        const rank = document.createElement('span');
+        rank.className = 'rank';
+        rank.textContent = ['🥇', '🥈', '🥉'][index] || `${index + 1}.`;
+        const name = document.createElement('span');
+        name.textContent = entry.name;
+        const points = document.createElement('span');
+        points.className = 'leader-score';
+        points.textContent = `${entry.score} pont`;
+        row.append(rank, name, points);
+        list.append(row);
+      });
+    }
+
+    $('start-quiz').addEventListener('click', () => startGame('quiz'));
+    $('start-streak').addEventListener('click', () => startGame('streak'));
+    $('open-leaderboard').addEventListener('click', () => { renderLeaderboard(); showScreen('leaderboard-screen'); });
+    $('next-question').addEventListener('click', () => { round += 1; showQuestion(); });
+    $('result-leaderboard').addEventListener('click', () => { renderLeaderboard(); showScreen('leaderboard-screen'); });
+    $('leaderboard-home').addEventListener('click', () => showScreen('home-screen'));
+    $('play-again').addEventListener('click', () => startGame(lastResult?.mode || 'quiz'));
+    $('name-form').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = $('player-name').value.trim();
+      if (!name || !lastResult || lastResult.mode !== 'streak') return;
+      saveScore(name, lastResult.score);
+      $('name-entry').hidden = true;
+    });
+
+    const dictionary = window.EnglishGamezOxfordWords;
+    if (Array.isArray(dictionary)) {
+      words = dictionary.filter(entry => entry.word && entry.file && (entry.level === 1 || entry.level === 2));
+    }
+    if (words.length >= 20) {
+      $('load-status').textContent = `Oxford képes szótár · ${words.length} szó · Level 1 és Level 2`;
+      $('start-quiz').disabled = false;
+      $('start-streak').disabled = false;
+    } else {
+      $('load-status').textContent = 'Az Oxford képes szótár nem tölthető be. Ellenőrizd, hogy a játék fájljai együtt vannak-e.';
+    }
+  </script>
+</body>
+</html>
