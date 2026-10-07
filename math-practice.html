@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f8ff">
+  <title>Matek gyakorlás • EnglishGamez</title>
+  <style>
+    :root { font-family: "Trebuchet MS", system-ui, sans-serif; color: #17304e; background: #f4f8ff; font-synthesis: none; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 18px; background: radial-gradient(ellipse at 8% 0%, #deedff 0, transparent 38%), radial-gradient(ellipse at 100% 100%, #e3faec 0, transparent 38%), #f4f8ff; }
+    button, input { font: inherit; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 4px solid #3276d2; outline-offset: 3px; }
+    .shell { width: min(100%, 760px); margin: 0 auto; }
+    .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .brand { color: #45607e; font-weight: 900; letter-spacing: .04em; }
+    .back { color: #355270; font-weight: 800; text-decoration: none; padding: 9px 14px; border-radius: 14px; background: #fff; box-shadow: 0 3px 0 #dce4f1; }
+    .card { background: #fff; border-radius: 28px; padding: clamp(20px, 5vw, 36px); box-shadow: 0 16px 42px #17304e18; }
+    h1 { margin: 0; text-align: center; font-size: clamp(2rem, 7vw, 3.15rem); line-height: 1.1; letter-spacing: -.04em; }
+    h2 { margin: 0 0 8px; text-align: center; font-size: clamp(1.45rem, 5vw, 2rem); }
+    .intro { text-align: center; color: #58708d; font-size: 1.08rem; line-height: 1.5; margin: 11px 0 23px; }
+    .screen[hidden] { display: none; }
+    .menu { display: grid; gap: 13px; }
+    .mode-button, .action { width: 100%; min-height: 68px; padding: 14px 18px; border: 0; border-radius: 18px; text-align: left; color: #1d426b; background: #eaf2ff; box-shadow: 0 5px 0 #cadcf5; font-weight: 900; cursor: pointer; transition: transform .12s, box-shadow .12s; }
+    .mode-button:hover, .action:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #cadcf5; }
+    .mode-button .mode-title { display: block; font-size: 1.18rem; }
+    .mode-button small { display: block; margin-top: 4px; font-size: .92rem; font-weight: 600; color: #58708d; }
+    .mode-button.balance { background: #ecf9ef; color: #205a37; box-shadow: 0 5px 0 #ccebd4; }
+    .mode-button.mystery { background: #e8f7f5; color: #205b5b; box-shadow: 0 5px 0 #bce5de; }
+    .mode-button.multi-balance { background: #edf4ff; color: #294f82; box-shadow: 0 5px 0 #cbdcf5; }
+    .mode-button.sequence { background: #fff5d9; color: #70520c; box-shadow: 0 5px 0 #f0dfa8; }
+    .mode-button.multiply { background: #f2eefe; color: #563b87; box-shadow: 0 5px 0 #dcd2f5; }
+    .calm-note { margin: 19px 0 0; padding: 13px 15px; border-radius: 16px; background: #f2f8ff; color: #486581; text-align: center; line-height: 1.5; }
+    .progress-wrap { margin: 18px 0; }
+    .progress-label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 7px; color: #526984; font-weight: 900; }
+    .progress { height: 12px; border-radius: 20px; overflow: hidden; background: #e8eef7; }
+    .progress > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#5d9aff,#63d79e); transition: width .3s; }
+    .equal-note { margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: #edf7ff; color: #315c7c; text-align: center; font-weight: 800; }
+    .visual { min-height: 150px; padding: 20px 14px; display: grid; place-items: center; border: 3px solid #edf2fa; border-radius: 22px; background: linear-gradient(145deg,#f8fbff,#f1f8ff); }
+    .big-equation { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: clamp(9px, 3vw, 22px); color: #214a75; font-size: clamp(2.25rem, 10vw, 4rem); font-weight: 900; }
+    .blank { min-width: 1.45em; display: inline-grid; place-items: center; border-bottom: 4px dashed #77a0cd; color: #a06b00; }
+    .balance-row { width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: clamp(5px, 2vw, 16px); }
+    .balance-side { min-width: 0; min-height: 104px; display: grid; align-content: center; justify-items: center; gap: 7px; padding: 10px 6px; border-radius: 18px; background: #fff; border: 2px solid #dce8f5; }
+    .balance-side small { color: #6e8299; font-size: .76rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+    .balance-expression { white-space: nowrap; font-size: clamp(1.5rem, 6.6vw, 2.8rem); font-weight: 900; color: #214a75; }
+    .equals { font-size: clamp(2rem, 8vw, 3.5rem); color: #3775bd; font-weight: 900; }
+    .sequence { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: clamp(7px, 2vw, 15px); color: #73540c; font-size: clamp(1.8rem, 8vw, 3.15rem); font-weight: 900; }
+    .sequence-term { min-width: 1.15em; text-align: center; }
+    .sequence-term.missing { border-bottom: 4px dashed #d7ad42; color: #aa7900; }
+    .groups { display: grid; gap: 10px; justify-items: center; margin-bottom: 10px; }
+    .dot-group { display: flex; gap: 8px; justify-content: center; color: #7755b5; font-size: 1.3rem; letter-spacing: .06em; }
+    .prompt { margin: 17px 0 10px; text-align: center; color: #34536f; font-size: 1.12rem; line-height: 1.5; font-weight: 800; }
+    .answer-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; }
+    .answer-input { width: 100%; min-width: 0; min-height: 60px; padding: 10px 16px; border: 3px solid #d4e0ee; border-radius: 16px; color: #17304e; background: #fff; text-align: center; font-size: 1.65rem; font-weight: 900; }
+    .action { width: auto; min-width: 150px; min-height: 60px; text-align: center; background: #e1f7e8; color: #205a37; box-shadow: 0 4px 0 #c1e8cc; }
+    .help-button { display: block; margin: 12px auto 0; min-height: 45px; padding: 8px 16px; border: 2px solid #d7e6f3; border-radius: 14px; color: #3f607d; background: #f5faff; font-weight: 800; cursor: pointer; }
+    .help-button:hover { background: #eaf4ff; }
+    .feedback { min-height: 42px; margin: 12px 0 4px; padding: 9px 12px; border-radius: 14px; color: #46617c; background: #f4f8fc; text-align: center; font-weight: 800; line-height: 1.45; }
+    .feedback.good { color: #17633a; background: #e9f8ee; }
+    .feedback.support { color: #70520c; background: #fff7df; }
+    .next { display: block; margin: 12px auto 0; max-width: 430px; }
+    .next[hidden] { display: none; }
+    .result-score { margin: 18px 0; text-align: center; color: #375575; font-size: 1.25rem; font-weight: 900; line-height: 1.5; }
+    .action.primary { text-align: center; color: white; background: #4a83cf; box-shadow: 0 5px 0 #3265aa; }
+    .footer { margin: 15px 0 0; text-align: center; color: #70839a; font-size: .9rem; }
+    @media (max-width: 470px) { body { padding: 10px; } .card { border-radius: 22px; } .answer-form { grid-template-columns: 1fr; } .action { width: 100%; } .balance-side { min-height: 90px; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="top"><span class="brand">🧮 MATEK KALAND</span><a class="back" href="index.html">⌂ Főmenü</a></header>
+    <section class="card">
+      <section id="menu-screen" class="screen">
+        <h1>Matek gyakorlás</h1>
+        <p class="intro">Válaszd ki, mivel szeretnél ma gyakorolni!</p>
+        <nav class="menu" aria-label="Gyakorlófeladatok">
+          <button class="mode-button" type="button" data-mode="mental"><span class="mode-title">🧠 Fejben számolás 20-ig</span><small>Összeadás és kivonás, kis segítséggel</small></button>
+          <button class="mode-button balance" type="button" data-mode="balance"><span class="mode-title">⚖️ Mérlegegyenletek</span><small>Az egyenlőség két oldala ugyanannyit ér</small></button>
+          <button class="mode-button mystery" type="button" data-mode="balanceMystery"><span class="mode-title">🕵️ Mérlegnyomozó</span><small>A hiányzó szám bárhol megbújhat a műveletben</small></button>
+          <button class="mode-button multi-balance" type="button" data-mode="multiBalance"><span class="mode-title">➕ Többtagú mérleg</span><small>Három szám összeadása, a hiányzó rész akár az egyenlet másik oldalán</small></button>
+          <button class="mode-button sequence" type="button" data-mode="sequence"><span class="mode-title">🔢 Számsorozatok</span><small>Találd meg a hiányzó számot és a szabályt</small></button>
+          <button class="mode-button multiply" type="button" data-mode="multiply"><span class="mode-title">✖️ Szorzás alapjai</span><small>Egyforma csoportokkal, nyugodt tempóban</small></button>
+        </nav>
+        <p class="calm-note">Itt nem kell sietni. A hibák segítenek tanulni, és bármikor kérhetsz egy kis segítséget. 🌱</p>
+      </section>
+
+      <section id="play-screen" class="screen" hidden>
+        <h2 id="mode-title">Fejben számolás</h2>
+        <div class="progress-wrap">
+          <div class="progress-label"><span id="round-label">1. feladat / 5</span><span id="star-label">⭐ 0</span></div>
+          <div class="progress" role="progressbar" aria-label="Haladás"><span id="progress-bar"></span></div>
+        </div>
+        <p id="equal-note" class="equal-note" hidden>A = jel azt mondja: a két oldal ugyanannyit ér. ⚖️</p>
+        <div id="visual" class="visual" aria-label="Feladat"></div>
+        <p id="prompt" class="prompt"></p>
+        <form id="answer-form" class="answer-form">
+          <input id="answer" class="answer-input" type="number" inputmode="numeric" min="0" max="100" step="1" autocomplete="off" aria-label="Írd be a válaszodat">
+          <button id="check-answer" class="action" type="submit">Ellenőrzöm</button>
+        </form>
+        <button id="hint-button" class="help-button" type="button">💡 Kérek egy kis segítséget</button>
+        <p id="feedback" class="feedback" aria-live="polite">Gondolkodj nyugodtan. Megvárlak. 😊</p>
+        <button id="next-task" class="action primary next" type="button" hidden>Következő feladat ➜</button>
+      </section>
+
+      <section id="result-screen" class="screen" hidden>
+        <h2 id="result-title">Ügyesen gyakoroltál! 🌟</h2>
+        <p id="result-score" class="result-score"></p>
+        <p id="result-message" class="calm-note"></p>
+        <button id="again-button" class="action primary next" type="button">🔄 Gyakorlok még</button>
+        <button id="menu-button" class="help-button" type="button">Választok másik feladatot</button>
+      </section>
+    </section>
+    <p class="footer">Minden lépés számít. ⭐</p>
+  </main>
+
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const screens = ['menu-screen', 'play-screen', 'result-screen'].map($);
+    const modeInfo = {
+      mental: { title: 'Fejben számolás', name: 'Fejben számolás' },
+      balance: { title: 'Mérlegegyenletek', name: 'Mérlegegyenletek' },
+      balanceMystery: { title: 'Mérlegnyomozó', name: 'Mérlegnyomozó' },
+      multiBalance: { title: 'Többtagú mérleg', name: 'Többtagú mérleg' },
+      sequence: { title: 'Számsorozatok', name: 'Számsorozatok' },
+      multiply: { title: 'Szorzás alapjai', name: 'Szorzás alapjai' }
+    };
+    const SESSION_LENGTH = 5;
+    let mode = 'mental';
+    let task = null;
+    let done = 0;
+    let solved = 0;
+    let modeRounds = 0;
+
+    function showScreen(id) { screens.forEach(screen => { screen.hidden = screen.id !== id; }); }
+    function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+    function shuffle(items) {
+      const copy = items.slice();
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = randomInt(0, i);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+    function resetMessage(state = '', message = '') {
+      $('feedback').className = 'feedback' + (state ? ` ${state}` : '');
+      $('feedback').textContent = message;
+    }
+    function setProgress() {
+      $('round-label').textContent = `${Math.min(done + 1, SESSION_LENGTH)}. feladat / ${SESSION_LENGTH}`;
+      $('star-label').textContent = `⭐ ${solved}`;
+      $('progress-bar').style.width = `${done / SESSION_LENGTH * 100}%`;
+    }
+    function makeTask() {
+      if (mode === 'mental') {
+        if (Math.random() < .55) {
+          const a = randomInt(1, 10);
+          const b = randomInt(1, Math.min(10, 20 - a));
+          return { kind: 'mental', a, b, op: '+', answer: a + b, attempts: 0, hints: 0 };
+        }
+        const a = randomInt(6, 20);
+        const b = randomInt(1, Math.min(a, 10));
+        return { kind: 'mental', a, b, op: '−', answer: a - b, attempts: 0, hints: 0 };
+      }
+      if (mode === 'balance') return makeBalanceTask(false);
+      if (mode === 'balanceMystery') return makeBalanceTask(true);
+      if (mode === 'multiBalance') return makeMultiBalanceTask();
+      if (mode === 'sequence') return makeSequenceTask();
+      return makeMultiplicationTask();
+    }
+    function makeBalanceTask(mystery) {
+      const op = Math.random() < .6 ? '+' : '−';
+      const unknownPosition = mystery && Math.random() < .5 ? 'first' : 'second';
+      let knownNumber;
+      let answer;
+      let total;
+      let variable;
+      if (op === '+') {
+        knownNumber = randomInt(1, 10);
+        answer = randomInt(1, 10);
+        total = knownNumber + answer;
+        variable = unknownPosition === 'first' ? `□ + ${knownNumber}` : `${knownNumber} + □`;
+      } else if (unknownPosition === 'first') {
+        knownNumber = randomInt(1, 10);
+        answer = randomInt(knownNumber + 1, 20);
+        total = answer - knownNumber;
+        variable = `□ − ${knownNumber}`;
+      } else {
+        knownNumber = randomInt(2, 20);
+        answer = randomInt(1, knownNumber - 1);
+        total = knownNumber - answer;
+        variable = `${knownNumber} − □`;
+      }
+      const knownExpression = makeKnownExpression(total);
+      const blankOnLeft = Math.random() < .5;
+      return {
+        kind: 'balance', op, mystery, unknownPosition, left: blankOnLeft ? variable : knownExpression,
+        right: blankOnLeft ? knownExpression : variable, knownExpression, knownValue: total,
+        knownNumber, answer, blankOnLeft, substage: 0, attempts: 0, hints: 0
+      };
+    }
+    function makeKnownExpression(total) {
+      if (total < 20 && Math.random() < .45) {
+        const difference = randomInt(1, Math.min(10, 20 - total));
+        return `${total + difference} − ${difference}`;
+      }
+      if (total === 0) return '0 + 0';
+      const first = randomInt(1, total);
+      return `${first} + ${total - first}`;
+    }
+    function makeMultiBalanceTask() {
+      const numbers = [randomInt(1, 8), randomInt(1, 8), randomInt(1, 8)];
+      while (numbers.reduce((sum, value) => sum + value, 0) > 20) {
+        const largest = numbers.indexOf(Math.max(...numbers));
+        numbers[largest] -= 1;
+      }
+      const answer = numbers.reduce((sum, value) => sum + value, 0);
+      const blankOnLeft = Math.random() < .5;
+      const missingResult = Math.random() < .3;
+      if (missingResult) {
+        const expression = numbers.join(' + ');
+        return {
+          kind: 'multiBalance', missingResult, blankOnLeft, answer,
+          left: blankOnLeft ? '□' : expression,
+          right: blankOnLeft ? expression : '□',
+          expression, numbers, substage: 0, attempts: 0, hints: 0
+        };
+      }
+      const missingIndex = randomInt(0, 2);
+      const knownNumbers = numbers.filter((_, index) => index !== missingIndex);
+      const knownValue = knownNumbers.reduce((sum, value) => sum + value, 0);
+      const terms = numbers.map((value, index) => index === missingIndex ? '□' : String(value));
+      return {
+        kind: 'multiBalance', missingResult, blankOnLeft, answer: numbers[missingIndex],
+        left: blankOnLeft ? terms.join(' + ') : String(answer + knownValue),
+        right: blankOnLeft ? String(answer + knownValue) : terms.join(' + '),
+        terms, knownNumbers, knownValue, substage: 0, attempts: 0, hints: 0
+      };
+    }
+    function multiBalanceStageExpression(currentTask) {
+      return currentTask.terms.indexOf('□') === 0
+        ? `□ + ${currentTask.knownValue}`
+        : `${currentTask.knownValue} + □`;
+    }
+    function makeSequenceTask() {
+      const step = shuffle([1, 2, 3, -1, -2])[0];
+      const minStart = step < 0 ? 4 * Math.abs(step) : 0;
+      const maxStart = step > 0 ? 20 - 4 * step : 20;
+      const start = randomInt(minStart, maxStart);
+      const values = Array.from({ length: 5 }, (_, i) => start + i * step);
+      const missingIndex = randomInt(1, 3);
+      return { kind: 'sequence', values, missingIndex, answer: values[missingIndex], step, attempts: 0, hints: 0 };
+    }
+    function makeMultiplicationTask() {
+      const groupSize = shuffle([2, 5, 10])[0];
+      const groupCount = randomInt(2, Math.floor(20 / groupSize));
+      return { kind: 'multiply', groupSize, groupCount, answer: groupSize * groupCount, attempts: 0, hints: 0 };
+    }
+    function renderTask() {
+      setProgress();
+      $('answer').value = '';
+      $('answer').disabled = false;
+      $('check-answer').disabled = false;
+      $('hint-button').disabled = false;
+      $('next-task').hidden = true;
+      resetMessage('', 'Gondolkodj nyugodtan. Megvárlak. 😊');
+      $('equal-note').hidden = task.kind !== 'balance' && task.kind !== 'multiBalance';
+      $('prompt').textContent = promptForTask();
+      const visual = $('visual');
+      visual.replaceChildren();
+      if (task.kind === 'mental') renderMental(visual);
+      if (task.kind === 'balance') renderBalance(visual);
+      if (task.kind === 'multiBalance') renderBalance(visual);
+      if (task.kind === 'sequence') renderSequence(visual);
+      if (task.kind === 'multiply') renderMultiplication(visual);
+      $('answer').focus();
+    }
+    function renderMental(visual) {
+      const equation = document.createElement('div');
+      equation.className = 'big-equation';
+      equation.textContent = `${task.a} ${task.op} ${task.b} = ?`;
+      visual.append(equation);
+    }
+    function renderBalance(visual) {
+      const row = document.createElement('div');
+      row.className = 'balance-row';
+      const left = document.createElement('div');
+      left.className = 'balance-side';
+      const leftLabel = document.createElement('small');
+      leftLabel.textContent = 'Bal oldal';
+      const leftExpression = document.createElement('strong');
+      leftExpression.className = 'balance-expression';
+      leftExpression.textContent = task.kind === 'balance' && task.substage === 1 && !task.blankOnLeft ? String(task.knownValue) : task.left;
+      left.append(leftLabel, leftExpression);
+      const equal = document.createElement('span');
+      equal.className = 'equals';
+      equal.textContent = '=';
+      const right = document.createElement('div');
+      right.className = 'balance-side';
+      const rightLabel = document.createElement('small');
+      rightLabel.textContent = 'Jobb oldal';
+      const rightExpression = document.createElement('strong');
+      rightExpression.className = 'balance-expression';
+      rightExpression.textContent = task.kind === 'balance' && task.substage === 1 && task.blankOnLeft ? String(task.knownValue) : task.right;
+      right.append(rightLabel, rightExpression);
+      row.append(left, equal, right);
+      visual.append(row);
+    }
+    function renderSequence(visual) {
+      const sequence = document.createElement('div');
+      sequence.className = 'sequence';
+      task.values.forEach((value, index) => {
+        const term = document.createElement('span');
+        term.className = 'sequence-term' + (index === task.missingIndex ? ' missing' : '');
+        term.textContent = index === task.missingIndex ? '□' : value;
+        sequence.append(term);
+        if (index < task.values.length - 1) {
+          const comma = document.createElement('span');
+          comma.setAttribute('aria-hidden', 'true');
+          comma.textContent = '·';
+          sequence.append(comma);
+        }
+      });
+      visual.append(sequence);
+    }
+    function renderMultiplication(visual) {
+      const groups = document.createElement('div');
+      groups.className = 'groups';
+      for (let i = 0; i < task.groupCount; i++) {
+        const group = document.createElement('div');
+        group.className = 'dot-group';
+        group.textContent = Array(task.groupSize).fill('●').join(' ');
+        groups.append(group);
+      }
+      const equation = document.createElement('div');
+      equation.className = 'big-equation';
+      equation.textContent = `${task.groupCount} × ${task.groupSize} = ?`;
+      visual.append(groups, equation);
+    }
+    function promptForTask() {
+      if (task.kind === 'mental') return 'Mennyi lesz? Próbáld meg fejben kiszámolni.';
+      if (task.kind === 'sequence') return 'Melyik szám hiányzik a sorból?';
+      if (task.kind === 'multiply') return `Hány pötty van összesen ${task.groupCount} egyforma csoportban?`;
+      if (task.kind === 'multiBalance') {
+        if (task.missingResult) return 'Add össze a három számot! Figyeld meg: a □ az egyenlet bármelyik oldalán lehet.';
+        if (task.substage === 0) return 'Először add össze a négyzet nélküli két számot! A két oldal ugyanannyit ér.';
+        return `A látható két szám együtt ${task.knownValue}. Mennyit kell még hozzáadni, hogy ${task.answer + task.knownValue} legyen?`;
+      }
+      if (task.substage === 0) return 'Először számold ki azt az oldalt, amelyikben nincs üres négyzet.';
+      return `Szuper! Mindkét oldal ${task.knownValue}. Milyen szám kerüljön a □ helyére?`;
+    }
+    function hintForTask() {
+      if (task.kind === 'mental' && task.op === '+') {
+        for (const [a, b] of [[task.a, task.b], [task.b, task.a]]) {
+          const toTen = 10 - a;
+          if (a < 10 && toTen > 0 && b > toTen) return `Bontsd fel a ${b}-et: ${toTen} kell a ${a}-hoz, hogy 10 legyen. Mennyi marad még a ${b}-ből?`;
+        }
+        return `Indulj a nagyobb számtól (${Math.max(task.a, task.b)}), és lépj előre ${Math.min(task.a, task.b)}-et.`;
+      }
+      if (task.kind === 'mental') {
+        if (task.b >= 5) return `Gondold meg, mennyit kell lépni ${task.b}-től ${task.a}-ig. Először menj a következő tízesig.`;
+        return `Indulj ${task.a}-tól, és lépj vissza ${task.b}-et.`;
+      }
+      if (task.kind === 'balance' && task.substage === 0) return 'A két oldal egyenlő. Először a négyzet nélküli művelet eredményét keresd meg.';
+      if (task.kind === 'multiBalance' && task.missingResult) return `Számolj párokat: ${task.numbers[0]} + ${task.numbers[1]} = ${task.numbers[0] + task.numbers[1]}, aztán adj hozzá még ${task.numbers[2]}-et.`;
+      if (task.kind === 'multiBalance' && task.substage === 0) return `${task.knownNumbers[0]} + ${task.knownNumbers[1]}: előbb ezt a két látható számot add össze. Utána a □-t kereshetjük meg.`;
+      if (task.kind === 'multiBalance') return `A teljes értékből (${task.answer + task.knownValue}) vond ki a már kiszámolt ${task.knownValue}-et.`;
+      if (task.kind === 'balance' && task.op === '+') return `A hiányzó számot kivonással találod meg: ${task.knownValue} − ${task.knownNumber}.`;
+      if (task.kind === 'balance' && task.unknownPosition === 'first') return `Ha a négyzetből vonunk ki ${task.knownNumber}-et, a hiányzót összeadással keresd: ${task.knownValue} + ${task.knownNumber}.`;
+      if (task.kind === 'balance') return `A hiányzó kivonandót így keresd: ${task.knownNumber} − ${task.knownValue}.`;
+      if (task.kind === 'sequence') return 'Nézd meg, mennyivel változik az első szám a következőre. Ugyanez a lépés ismétlődik.';
+      return `Számold össze a csoportokat: ${Array(task.groupCount).fill(task.groupSize).join(' + ')}.`;
+    }
+    function fullExplanation() {
+      if (task.kind === 'mental' && task.op === '+') {
+        const a = task.a <= 10 ? task.a : task.b;
+        const b = a === task.a ? task.b : task.a;
+        const toTen = 10 - a;
+        if (a < 10 && b > toTen) return `${a} + ${b} = ${a} + ${toTen} + ${b - toTen} = 10 + ${b - toTen} = ${task.answer}.`;
+        return `${task.a} + ${task.b} = ${task.answer}. Kezdd a nagyobb számtól, és adj hozzá ${Math.min(task.a, task.b)}-et.`;
+      }
+      if (task.kind === 'mental') return `${task.a} − ${task.b} = ${task.answer}. Visszaléphetsz ${task.a}-tól ${task.b}-et.`;
+      if (task.kind === 'balance' && task.substage === 0) return `${task.knownExpression} = ${task.knownValue}. A két oldal ugyanannyit ér.`;
+      if (task.kind === 'multiBalance' && task.missingResult) return `${task.numbers.join(' + ')} = ${task.answer}. Először ${task.numbers[0]} + ${task.numbers[1]} = ${task.numbers[0] + task.numbers[1]}, majd ${task.numbers[0] + task.numbers[1]} + ${task.numbers[2]} = ${task.answer}.`;
+      if (task.kind === 'multiBalance' && task.substage === 0) return `${task.knownNumbers[0]} + ${task.knownNumbers[1]} = ${task.knownValue}. A két oldal egyenlő, ezért a hiányzó tag ${task.answer + task.knownValue} − ${task.knownValue} = ${task.answer}.`;
+      if (task.kind === 'multiBalance') return `${task.knownNumbers[0]} + ${task.knownNumbers[1]} = ${task.knownValue}, így ${task.answer} + ${task.knownValue} = ${task.answer + task.knownValue}. Ezért a hiányzó szám ${task.answer + task.knownValue} − ${task.knownValue} = ${task.answer}.`;
+      if (task.kind === 'balance' && task.op === '+') return `${task.unknownPosition === 'first' ? `${task.answer} + ${task.knownNumber}` : `${task.knownNumber} + ${task.answer}`} = ${task.knownValue}, ezért a hiányzó szám ${task.knownValue} − ${task.knownNumber} = ${task.answer}.`;
+      if (task.kind === 'balance' && task.unknownPosition === 'first') return `${task.answer} − ${task.knownNumber} = ${task.knownValue}, ezért a hiányzó szám ${task.knownValue} + ${task.knownNumber} = ${task.answer}.`;
+      if (task.kind === 'balance') return `${task.knownNumber} − ${task.answer} = ${task.knownValue}, ezért a hiányzó szám ${task.knownNumber} − ${task.knownValue} = ${task.answer}.`;
+      if (task.kind === 'sequence') return `A szabály: ${task.step > 0 ? `mindig ${task.step}-del nő` : `mindig ${Math.abs(task.step)}-del csökken`}. Így a hiányzó szám ${task.answer}.`;
+      return `${task.groupCount} csoportban ${task.groupSize} pötty van: ${Array(task.groupCount).fill(task.groupSize).join(' + ')} = ${task.answer}.`;
+    }
+    function showHint() {
+      if (!task || task.complete) return;
+      task.hints += 1;
+      resetMessage('support', hintForTask());
+      $('answer').focus();
+    }
+    function checkAnswer(event) {
+      event.preventDefault();
+      if (!task || task.complete) return;
+      const raw = $('answer').value;
+      if (raw === '') {
+        resetMessage('support', 'Írj be egy számot. Nincs sietség. 😊');
+        return;
+      }
+      const value = Number(raw);
+      if (!Number.isInteger(value)) {
+        resetMessage('support', 'Egész számot írj be, kérlek.');
+        return;
+      }
+      const expected = task.kind === 'balance' && task.substage === 0
+        ? task.knownValue
+        : task.kind === 'multiBalance' && !task.missingResult && task.substage === 0
+          ? task.knownValue
+          : task.answer;
+      if (value === expected) {
+        if (task.kind === 'multiBalance' && !task.missingResult && task.substage === 0) {
+          task.substage = 1;
+          task.attempts = 0;
+          const simplifiedExpression = multiBalanceStageExpression(task);
+          task.left = task.blankOnLeft ? simplifiedExpression : String(task.answer + task.knownValue);
+          task.right = task.blankOnLeft ? String(task.answer + task.knownValue) : simplifiedExpression;
+          renderTask();
+          resetMessage('good', `Pontosan! A két látható szám összege ${task.knownValue}. Most keressük meg a hiányzó tagot. ⚖️`);
+          return;
+        }
+        if (task.kind === 'balance' && task.substage === 0) {
+          task.substage = 1;
+          task.attempts = 0;
+          renderTask();
+          resetMessage('good', `Pontosan! A művelet eredménye ${task.knownValue}. Most keressük meg a hiányzó számot. ⚖️`);
+          return;
+        }
+        task.complete = true;
+        done += 1;
+        solved += 1;
+        setProgress();
+        const reward = solved === 3 ? ' Három csillag! Fantasztikus vagy! ✨' : '';
+        resetMessage('good', `Ügyes! ${fullExplanation()} Megtaláltad a megoldást. Büszke lehetsz magadra! 🌟${reward}`);
+        $('answer').disabled = true;
+        $('check-answer').disabled = true;
+        $('hint-button').disabled = true;
+        $('next-task').hidden = false;
+        $('answer').blur();
+        return;
+      }
+      task.attempts += 1;
+      if (task.kind === 'multiBalance' && !task.missingResult && task.substage === 0 && task.attempts >= 2) {
+        task.substage = 1;
+        task.attempts = 0;
+        const simplifiedExpression = multiBalanceStageExpression(task);
+        task.left = task.blankOnLeft ? simplifiedExpression : String(task.answer + task.knownValue);
+        task.right = task.blankOnLeft ? String(task.answer + task.knownValue) : simplifiedExpression;
+        renderTask();
+        resetMessage('support', `Semmi baj, együtt megyünk tovább: a két ismert szám összege ${task.knownValue}. Most már csak a hiányzó tagot keressük.`);
+        return;
+      }
+      if (task.kind === 'balance' && task.substage === 0 && task.attempts >= 2) {
+        task.substage = 1;
+        task.attempts = 0;
+        renderTask();
+        resetMessage('support', `${task.knownExpression} = ${task.knownValue}. Most már tudjuk, mennyit ér a másik oldal is. Próbáljuk meg együtt a hiányzó számot!`);
+        return;
+      }
+      if (task.attempts === 1) {
+        resetMessage('support', `Még nem ez az eredmény, semmi baj. ${hintForTask()}`);
+        $('answer').focus();
+        return;
+      }
+      task.complete = true;
+      done += 1;
+      setProgress();
+      resetMessage('support', `Ez a feladat trükkös volt. Nézzük meg együtt: ${fullExplanation()} A gyakorlás akkor is számít, ha most segítség kellett. 💛`);
+      $('answer').disabled = true;
+      $('check-answer').disabled = true;
+      $('hint-button').disabled = true;
+      $('next-task').hidden = false;
+      $('answer').blur();
+    }
+    function startSession(selectedMode) {
+      mode = selectedMode;
+      done = 0;
+      solved = 0;
+      modeRounds = 0;
+      $('mode-title').textContent = modeInfo[mode].title;
+      showScreen('play-screen');
+      nextTask();
+    }
+    function nextTask() {
+      if (done >= SESSION_LENGTH) {
+        finishSession();
+        return;
+      }
+      task = makeTask();
+      modeRounds += 1;
+      renderTask();
+    }
+    function finishSession() {
+      $('result-title').textContent = solved === SESSION_LENGTH ? 'Öt feladatot is megoldottál! 🎉' : 'Ügyesen végiggyakoroltad! 🌟';
+      $('result-score').textContent = `${'⭐'.repeat(solved) || '🌱'}\nMegoldott feladatok: ${solved} / ${SESSION_LENGTH}`;
+      $('result-message').textContent = solved === SESSION_LENGTH
+        ? 'Nagyon ügyesen gondolkodtál. Pihenj egyet, vagy válassz másik kalandot!'
+        : 'Minden próbálkozással tanultál valamit. A nehezebb feladatokhoz bármikor visszatérhetsz.';
+      showScreen('result-screen');
+    }
+
+    document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => startSession(button.dataset.mode)));
+    $('answer-form').addEventListener('submit', checkAnswer);
+    $('hint-button').addEventListener('click', showHint);
+    $('next-task').addEventListener('click', nextTask);
+    $('again-button').addEventListener('click', () => startSession(mode));
+    $('menu-button').addEventListener('click', () => showScreen('menu-screen'));
+  </script>
+</body>
+</html>

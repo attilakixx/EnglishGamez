@@ -40,8 +40,14 @@
     .choice:disabled { cursor: default; }
     .choice.correct { color: #155b31; border-color: #44be72; background: #dcf8e5; box-shadow: 0 3px 0 #a2e0b6; }
     .choice.wrong { color: #8b2222; border-color: #ed6666; background: #ffe3e3; box-shadow: 0 3px 0 #f3b8b8; }
+    .pass-button { display: block; margin: 12px auto 0; min-height: 46px; padding: 8px 16px; border: 2px solid #f0d88c; border-radius: 14px; color: #765500; background: #fff8df; font-weight: 800; }
+    .pass-button:hover { background: #fff0bd; }
+    .next[hidden], .pass-button[hidden] { display: none; }
     .feedback { min-height: 34px; margin: 12px 0 4px; text-align: center; font-size: 1.1rem; font-weight: 900; }
     .feedback.good { color: #18723b; } .feedback.bad { color: #ab3030; }
+    .celebration { margin: 4px auto; width: fit-content; padding: 9px 18px; border-radius: 999px; color: #775000; background: #fff2be; font-weight: 900; text-align: center; }
+    .celebration.pop { animation: celebrate .55s cubic-bezier(.2,.9,.3,1.4); }
+    @keyframes celebrate { 0% { transform: scale(.55) rotate(-5deg); opacity: .2; } 65% { transform: scale(1.12) rotate(2deg); } 100% { transform: scale(1); opacity: 1; } }
     .next { display: block; margin: 8px auto 0; max-width: 420px; }
     .score { margin: 15px 0 20px; text-align: center; color: #375575; font-size: 1.2rem; font-weight: 800; }
     .leaderboard { margin: 20px 0; padding: 0; list-style: none; }
@@ -72,6 +78,7 @@
 
       <section id="game-screen" class="screen" hidden>
         <h2 id="game-title">20 kérdéses játék</h2>
+        <p id="celebration" class="celebration" aria-live="polite" hidden></p>
         <div class="progress-wrap">
           <div class="progress-label"><span id="round-label">1. kérdés</span><span id="score-label">⭐ 0</span></div>
           <div class="progress" role="progressbar" aria-label="Játék előrehaladása"><span id="progress-bar"></span></div>
@@ -79,6 +86,7 @@
         <div class="picture-frame"><img id="question-image" alt="Kép alapján válaszd ki az angol szót"></div>
         <p id="word-caption" class="word-caption" lang="hu"></p>
         <div id="choices" class="choices" aria-label="Válaszlehetőségek"></div>
+        <button id="pass-question" class="pass-button" type="button">🤔 Passz, hallgassuk meg!</button>
         <p id="feedback" class="feedback" aria-live="polite"></p>
         <button id="next-question" class="big-button next" hidden>Következő kép ➜</button>
       </section>
@@ -86,6 +94,7 @@
       <section id="result-screen" class="screen" hidden>
         <h2 id="result-title">Szép munka! 🎉</h2>
         <p id="result-score" class="score"></p>
+        <p id="result-review" class="score" hidden></p>
         <div id="name-entry" hidden>
           <p class="intro">Új rekord! Mi legyen a neved a toplistán?</p>
           <form id="name-form" class="entry"><input id="player-name" maxlength="18" required aria-label="Neved" placeholder="A neved"><button type="submit">Mentés</button></form>
@@ -149,6 +158,11 @@
     let score = 0;
     let answered = false;
     let endAfterAnswer = false;
+    let mainAnswered = 0;
+    let reviewScheduled = 0;
+    let reviewAnswered = 0;
+    let reviewCorrect = 0;
+    let celebrationTimer = 0;
     let lastResult = null;
 
     function showScreen(id) {
@@ -177,9 +191,16 @@
       if (words.length < 20) return;
       mode = selectedMode;
       const uniqueWords = [...new Map(words.map(item => [item.word.toLocaleLowerCase(), item])).values()];
-      deck = shuffle(uniqueWords).slice(0, mode === 'quiz' ? 20 : uniqueWords.length);
+      deck = shuffle(uniqueWords).slice(0, mode === 'quiz' ? 20 : uniqueWords.length).map(item => ({ ...item }));
       round = 0;
       score = 0;
+      mainAnswered = 0;
+      reviewScheduled = 0;
+      reviewAnswered = 0;
+      reviewCorrect = 0;
+      window.clearTimeout(celebrationTimer);
+      $('celebration').hidden = true;
+      $('result-review').hidden = true;
       $('game-title').textContent = mode === 'quiz' ? '20 kérdéses játék' : 'Szósorozat';
       showScreen('game-screen');
       showQuestion();
@@ -192,15 +213,19 @@
       answered = false;
       endAfterAnswer = false;
       const question = deck[round % deck.length];
-      $('round-label').textContent = mode === 'quiz' ? `${round + 1}. kérdés / 20` : `${round + 1}. szó egymás után`;
+      $('round-label').textContent = mode !== 'quiz' ? `${round + 1}. szó egymás után`
+        : question.isRetry ? `Ismétlés · ${mainAnswered} / 20`
+        : question.isBuffer ? `Bónuszkérdés · ${mainAnswered} / 20`
+        : `${mainAnswered + 1}. kérdés / 20`;
       $('score-label').textContent = `⭐ ${score}`;
-      $('progress-bar').style.width = mode === 'quiz' ? `${round / 20 * 100}%` : '100%';
+      $('progress-bar').style.width = mode === 'quiz' ? `${mainAnswered / 20 * 100}%` : '100%';
       $('question-image').src = 'english_game/' + question.file.split('/').map(encodeURIComponent).join('/');
       $('question-image').alt = 'Kép az angol szó felismeréséhez';
       $('word-caption').textContent = hungarianWords[question.word.toLocaleLowerCase()] || '';
       $('feedback').textContent = '';
       $('feedback').className = 'feedback';
       $('next-question').hidden = true;
+      $('pass-question').hidden = false;
       const uniqueDistractors = [...new Map(words.filter(item => item.word !== question.word).map(item => [item.word.toLocaleLowerCase(), item])).values()];
       const distractors = shuffle(uniqueDistractors).slice(0, 3);
       const options = shuffle([question, ...distractors]);
@@ -214,28 +239,47 @@
         button.addEventListener('click', () => answer(button, option, question, options));
         choices.append(button);
       });
+      $('pass-question').onclick = () => answer(null, null, question, options, true);
     }
-    function answer(selectedButton, selected, question, options) {
+    function answer(selectedButton, selected, question, options, isPass = false) {
       if (answered) return;
       answered = true;
+      $('pass-question').hidden = true;
       const buttons = [...$('choices').children];
       buttons.forEach((button, index) => {
         button.disabled = true;
         if (options[index].word === question.word) button.classList.add('correct');
       });
-      const right = selected.word === question.word;
+      const right = !isPass && selected.word === question.word;
       const feedback = $('feedback');
+      if (mode === 'streak') {
+        if (right) {
+          score += 1;
+          if (score === 10 || score % 3 === 0) celebrate(score);
+        }
+      } else if (question.isRetry) {
+        reviewAnswered += 1;
+        if (right) reviewCorrect += 1;
+      } else if (!question.isBuffer) {
+        mainAnswered += 1;
+        if (right) score += 1;
+        else queueReview(question, round);
+        if (mainAnswered === 10 || (mainAnswered % 3 === 0 && mainAnswered < 20)) celebrate(mainAnswered);
+      }
       if (right) {
-        score += 1;
-        feedback.textContent = 'Helyes! 🌟 Mondd utánam!';
+        feedback.textContent = question.isRetry ? 'Most már tudod! 🌟 Mondd utánam!'
+          : question.isBuffer ? 'Szuper bónuszkérdés! 🌟 Mondd utánam!'
+          : 'Helyes! 🌟 Mondd utánam!';
         feedback.classList.add('good');
       } else {
-        selectedButton.classList.add('wrong');
-        feedback.textContent = `A helyes szó: ${question.word}. Mondd utánam!`;
+        if (selectedButton) selectedButton.classList.add('wrong');
+        feedback.textContent = isPass
+          ? `Semmi baj! A helyes szó: ${question.word}. Mondd utánam!`
+          : `${question.isRetry ? 'Próbáld meg megjegyezni' : 'A helyes szó'}: ${question.word}. Mondd utánam!`;
         feedback.classList.add('bad');
       }
       $('score-label').textContent = `⭐ ${score}`;
-      $('progress-bar').style.width = mode === 'quiz' ? `${(round + 1) / 20 * 100}%` : '100%';
+      $('progress-bar').style.width = mode === 'quiz' ? `${mainAnswered / 20 * 100}%` : '100%';
       speakAnswer(question.word);
       if (mode === 'streak' && !right) {
         endAfterAnswer = true;
@@ -243,17 +287,38 @@
         $('next-question').hidden = false;
         return;
       }
-      if (mode === 'quiz' && round === 19) {
-        $('next-question').textContent = 'Eredmény ➜';
-      } else {
-        $('next-question').textContent = 'Következő kép ➜';
-      }
+      $('next-question').textContent = round === deck.length - 1 ? 'Eredmény ➜' : 'Következő kép ➜';
       $('next-question').hidden = false;
+    }
+    function queueReview(question, currentRound) {
+      const reviewPosition = currentRound + 4;
+      while (deck.length < reviewPosition) {
+        const bufferWord = shuffle(words.filter(item => item.word !== question.word))[0];
+        deck.push({ ...bufferWord, isBuffer: true });
+      }
+      deck.splice(reviewPosition, 0, { ...question, isRetry: true });
+      reviewScheduled += 1;
+    }
+    function celebrate(count) {
+      const badge = $('celebration');
+      badge.textContent = count === 10
+        ? '🎉 10 kérdés! Fantasztikus vagy! 🏆✨'
+        : `🌟 ${count} kérdés kész! Szuper vagy! 🎉`;
+      badge.hidden = false;
+      badge.classList.remove('pop');
+      void badge.offsetWidth;
+      badge.classList.add('pop');
+      window.clearTimeout(celebrationTimer);
+      celebrationTimer = window.setTimeout(() => { badge.hidden = true; }, 2600);
     }
     function finishGame() {
       lastResult = { mode, score };
       $('result-title').textContent = mode === 'quiz' ? 'Vége a 20 kérdésnek! 🎉' : 'Vége a szósorozatnak! 🏁';
-      $('result-score').textContent = mode === 'quiz' ? `Helyes válaszok: ${score} / 20` : `Hibátlan szósorozat: ${score} pont`;
+      $('result-score').textContent = mode === 'quiz' ? `Elsőre helyes válaszok: ${score} / 20` : `Hibátlan szósorozat: ${score} pont`;
+      $('result-review').hidden = mode !== 'quiz' || reviewScheduled === 0;
+      if (mode === 'quiz' && reviewScheduled > 0) {
+        $('result-review').textContent = `Az ismétlő körben ${reviewCorrect} / ${reviewScheduled} szót találtál el!`;
+      }
       const board = getLeaderboard();
       const cutoff = board.length < 10 ? 0 : board[board.length - 1].score;
       const qualifies = mode === 'streak' && score > 0 && (board.length < 10 || score > cutoff);
