@@ -148,6 +148,7 @@
     let round = 0;
     let score = 0;
     let answered = false;
+    let endAfterAnswer = false;
     let lastResult = null;
 
     function showScreen(id) {
@@ -189,6 +190,7 @@
         deck = shuffle([...new Map(words.map(item => [item.word.toLocaleLowerCase(), item])).values()]);
       }
       answered = false;
+      endAfterAnswer = false;
       const question = deck[round % deck.length];
       $('round-label').textContent = mode === 'quiz' ? `${round + 1}. kérdés / 20` : `${round + 1}. szó egymás után`;
       $('score-label').textContent = `⭐ ${score}`;
@@ -236,7 +238,9 @@
       $('progress-bar').style.width = mode === 'quiz' ? `${(round + 1) / 20 * 100}%` : '100%';
       speakAnswer(question.word);
       if (mode === 'streak' && !right) {
-        window.setTimeout(() => finishGame(), 500);
+        endAfterAnswer = true;
+        $('next-question').textContent = 'Befejezés ➜';
+        $('next-question').hidden = false;
         return;
       }
       if (mode === 'quiz' && round === 19) {
@@ -295,7 +299,14 @@
     $('start-quiz').addEventListener('click', () => startGame('quiz'));
     $('start-streak').addEventListener('click', () => startGame('streak'));
     $('open-leaderboard').addEventListener('click', () => { renderLeaderboard(); showScreen('leaderboard-screen'); });
-    $('next-question').addEventListener('click', () => { round += 1; showQuestion(); });
+    $('next-question').addEventListener('click', () => {
+      if (endAfterAnswer) {
+        finishGame();
+        return;
+      }
+      round += 1;
+      showQuestion();
+    });
     $('result-leaderboard').addEventListener('click', () => { renderLeaderboard(); showScreen('leaderboard-screen'); });
     $('leaderboard-home').addEventListener('click', () => showScreen('home-screen'));
     $('play-again').addEventListener('click', () => startGame(lastResult?.mode || 'quiz'));
