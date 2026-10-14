@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f3ff">
+  <title>DórikaMatek – logika és halmazok</title>
+  <link rel="stylesheet" href="dorika-matek.css">
+  <script src="dorika-matek.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="home-link" href="../index.html">← Főmenü</a>
+      <span class="brand">✦ DórikaMatek</span>
+      <button id="glossary-button" class="glossary-button" type="button">📚 Jelmagyarázat</button>
+    </header>
+
+    <main>
+      <section id="menu-screen" class="screen hero" aria-labelledby="page-title">
+        <p class="eyebrow">MATEMATIKAI LOGIKA · HALMAZOK</p>
+        <h1 id="page-title">Jelek, halmazok,<br><span>aha-pillanatok.</span></h1>
+        <p class="hero-lead">Tanuld meg a jegyzet anyagát lépésről lépésre, aztán próbáld ki, mit tudsz! Minden feladatnál kérhetsz segítséget, és nincs időmérés.</p>
+        <div class="mode-grid" aria-label="Játékmódok">
+          <button class="mode-card lesson-card" data-start="lesson" type="button"><span class="mode-icon">📖</span><span class="mode-text"><strong>Tanulópálya</strong><small>Jelölések, magyarázatok, Venn-diagramok</small></span><span aria-hidden="true">→</span></button>
+          <button class="mode-card diagram-card" data-start="diagram" type="button"><span class="mode-icon">◉</span><span class="mode-text"><strong>Venn-detektív</strong><small>Válaszd ki a kifejezéshez illő ábrát</small></span><span aria-hidden="true">→</span></button>
+          <button class="mode-card choice-card" data-start="choice" type="button"><span class="mode-icon">🎯</span><span class="mode-text"><strong>Halmazkvíz</strong><small>Véletlen számhalmazok és négy válasz</small></span><span aria-hidden="true">→</span></button>
+          <button class="mode-card write-card" data-start="write" type="button"><span class="mode-icon">✍️</span><span class="mode-text"><strong>Írd le a megoldást!</strong><small>A számokat te sorolod fel, nincs feleletválasztás</small></span><span aria-hidden="true">→</span></button>
+          <button class="mode-card logic-card" data-start="logic" type="button"><span class="mode-icon">⚡</span><span class="mode-text"><strong>Igaz vagy hamis?</strong><small>Tagadás, és, vagy, implikáció, ekvivalencia</small></span><span aria-hidden="true">→</span></button>
+        </div>
+        <p class="source-note">A játék a <a href="digitalis_jegyzetek.md">digitalizált jegyzet</a> alapján készült.</p>
+      </section>
+
+      <section id="lesson-screen" class="screen" hidden aria-labelledby="lesson-title">
+        <div class="section-head"><button class="text-button" data-home type="button">← Játékmódok</button><span class="pill">TANULÓPÁLYA</span></div>
+        <div class="progress-label"><span id="lesson-count"></span><span id="lesson-section"></span></div>
+        <div class="progress-track"><div id="lesson-progress" class="progress-fill"></div></div>
+        <article class="panel lesson-panel">
+          <div id="lesson-symbol" class="symbol-badge"></div>
+          <h2 id="lesson-title"></h2>
+          <p id="lesson-explain" class="large-copy"></p>
+          <div id="lesson-visual" class="lesson-visual"></div>
+          <p id="lesson-example" class="example-box"></p>
+          <div class="try-box"><p id="lesson-question"></p><button id="reveal-lesson" class="secondary-button" type="button">Mutasd a választ</button><p id="lesson-answer" class="revealed-answer" hidden></p></div>
+        </article>
+        <div class="nav-row"><button id="lesson-prev" class="secondary-button" type="button">← Előző</button><button id="lesson-next" class="primary-button" type="button">Következő →</button></div>
+      </section>
+
+      <section id="quiz-screen" class="screen" hidden aria-labelledby="quiz-title">
+        <div class="section-head"><button class="text-button" data-home type="button">← Játékmódok</button><span id="quiz-mode-tag" class="pill"></span></div>
+        <div class="progress-label"><span id="quiz-count"></span><span id="quiz-score"></span></div>
+        <div class="progress-track"><div id="quiz-progress" class="progress-fill"></div></div>
+        <article class="panel quiz-panel">
+          <p id="quiz-type" class="eyebrow"></p>
+          <h2 id="quiz-title"></h2>
+          <p id="quiz-instruction" class="quiz-instruction"></p>
+          <div id="quiz-data" class="quiz-data"></div>
+          <button id="quiz-help-button" class="help-button" type="button" aria-expanded="false" aria-controls="quiz-help-panel">💡 Segítséget kérek</button>
+          <aside id="quiz-help-panel" class="help-panel" hidden aria-label="Segítség az aktuális feladathoz">
+            <h3>Így olvasd</h3><p id="quiz-help-read"></p>
+            <h3>Mit jelent?</h3><p id="quiz-help-rule"></p>
+            <h3>Hogyan alkalmazd?</h3><p id="quiz-help-method"></p>
+            <p id="quiz-help-example" class="help-example"></p>
+          </aside>
+          <div id="quiz-options" class="quiz-options"></div>
+          <form id="answer-form" class="answer-form" hidden>
+            <label for="answer-input">Sorold fel a számokat vesszővel elválasztva:</label>
+            <div class="input-row"><input id="answer-input" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="például: 2, 4, 7 vagy ∅"><button class="primary-button" type="submit">Ellenőrzöm</button></div>
+            <small>A sorrend nem számít. Üres halmaznál írd be: ∅ vagy {}.</small>
+          </form>
+          <p id="quiz-feedback" class="feedback" aria-live="polite"></p>
+          <button id="quiz-next" class="primary-button next-button" type="button" hidden>Következő feladat →</button>
+        </article>
+      </section>
+
+      <section id="result-screen" class="screen" hidden aria-labelledby="result-title">
+        <div class="panel result-panel"><span class="result-icon">✦</span><h2 id="result-title">Vége a körnek!</h2><p id="result-summary"></p><p id="result-detail"></p><div class="result-actions"><button id="play-again" class="primary-button" type="button">Új kör</button><button class="secondary-button" data-home type="button">Másik játékmód</button></div></div>
+      </section>
+    </main>
+  </div>
+  <dialog id="glossary-dialog" aria-labelledby="glossary-title">
+    <div class="glossary-head"><h2 id="glossary-title">Jelmagyarázat</h2><button id="glossary-close" class="secondary-button" type="button" aria-label="Jelmagyarázat bezárása">Bezárás ×</button></div>
+    <p class="glossary-intro">Bármikor megnyithatod. A kvízben a 💡 gomb az éppen látható feladathoz ad részletesebb segítséget.</p>
+    <div id="glossary-list" class="glossary-list"></div>
+  </dialog>
+</body>
+</html>
